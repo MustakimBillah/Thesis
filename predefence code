@@ -1,0 +1,668 @@
+#include "stdafx.h"
+#include <iostream>
+#include <windows.h>
+#include <sqlext.h>
+#include <sqltypes.h>
+#include <sql.h>
+#include<string.h>
+#include "stdc++.h"
+
+using namespace std;
+
+
+vector<int>A1;
+vector<int>A2;
+vector<double>N1;
+vector<double>N2;
+vector<double>BN1;
+vector<double>BN2;
+vector<double>PN1;
+vector<double>PN2;
+vector<int>bid[20];
+vector< pair<int, int> >pid[8];
+int T[50];
+int B[20];
+
+struct info{
+	int nb1;
+	double x1;
+	double y1;
+	int nb2;
+	double x2;
+	double y2;
+};
+
+info neighbor[18];
+
+
+void showSQLError(unsigned int handleType, const SQLHANDLE& handle)
+{
+	SQLCHAR SQLState[1024];
+	SQLCHAR message[1024];
+	if (SQL_SUCCESS == SQLGetDiagRec(handleType, handle, 1, SQLState, NULL, message, 1024, NULL))
+		// Returns the current values of multiple fields of a diagnostic record that contains error, warning, and status information
+		cout << "SQL driver message: " << message << "\nSQL state: " << SQLState << "." << endl;
+}
+
+int func(int input)
+{
+	SQLHANDLE SQLEnvHandle = NULL;
+	SQLHANDLE SQLConnectionHandle = NULL;
+	SQLHANDLE SQLStatementHandle = NULL;
+	SQLRETURN retCode = 0;
+	
+		char shw[] = "SELECT * FROM sample";
+		//char shw1[] = "SELECT * FROM people3";
+		char insrt[] = "INSERT INTO people3 VALUES('raju',28)";
+		char crt_tbl[] = "CREATE TABLE [dbo].[sample](tid INT, a1 INT , a2 INT , n1 FLOAT , n2 FLOAT ) ";
+		char ifile[] = "BULK INSERT sample FROM 'F:\\datacube\\inn.txt' WITH(FIELDTERMINATOR = ',',ROWTERMINATOR = '\n')";
+		//char cube_gen[] = "select model, year, color, sum(amount)  from sales group by color, year, model with CUBE";
+		char cube_gen[] = "insert into sales1(model,year,color,amount) select model, year, color, sum(amount)  from sales group by color, year, model with CUBE";
+		//char cube_gen[] = "select case when model is null  then 'ALL' when year is null then 'ALL' when color is null then 'ALL' end model, coalesce(model, '') model, year, color, sum(amount) from sales group by color, year, model with CUBE";
+		char SQLQuery[10000];
+
+		//int input;
+		cout << " 1. show" << endl;
+		cout << " 2. insert" << endl;
+		cout << " 3. Create a table" << endl;
+		cout << " 4. take input from file" << endl;
+
+		//cin >> input;
+
+		if (input == 1)
+		{
+			strcpy_s(SQLQuery, shw);
+
+		}
+		else if (input == 2)
+		{
+			strcpy_s(SQLQuery, insrt);
+		}
+		else if (input == 3)
+		{
+			strcpy_s(SQLQuery, crt_tbl);
+		}
+		else if (input == 4)
+		{
+			strcpy_s(SQLQuery, ifile);
+		}
+		else if (input == 5)
+		{
+			strcpy_s(SQLQuery, cube_gen);
+		}
+
+		getchar();
+
+
+		do {
+			if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &SQLEnvHandle))
+				// Allocates the environment
+				break;
+
+			if (SQL_SUCCESS != SQLSetEnvAttr(SQLEnvHandle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0))
+				// Sets attributes that govern aspects of environments
+				break;
+
+			if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_DBC, SQLEnvHandle, &SQLConnectionHandle))
+				// Allocates the connection
+				break;
+
+			if (SQL_SUCCESS != SQLSetConnectAttr(SQLConnectionHandle, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0))
+				// Sets attributes that govern aspects of connections
+				break;
+
+			SQLCHAR retConString[1024]; // Conection string
+			switch (SQLDriverConnect(SQLConnectionHandle, NULL, (SQLCHAR*)"DRIVER={SQL Server}; SERVER=localhost, 1433; DATABASE=myDB; UID=myID; PWD=1234;", SQL_NTS, retConString, 1024, NULL, SQL_DRIVER_NOPROMPT)) {
+				// Establishes connections to a driver and a data source
+			case SQL_SUCCESS:
+				break;
+			case SQL_SUCCESS_WITH_INFO:
+				break;
+			case SQL_NO_DATA_FOUND:
+				showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+				retCode = -1;
+				break;
+			case SQL_INVALID_HANDLE:
+				showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+				retCode = -1;
+				break;
+			case SQL_ERROR:
+				showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+				retCode = -1;
+				break;
+			default:
+				break;
+			}
+
+			if (retCode == -1)
+				break;
+
+			if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_STMT, SQLConnectionHandle, &SQLStatementHandle))
+				// Allocates the statement
+				break;
+
+			if (SQL_SUCCESS != SQLExecDirect(SQLStatementHandle, (SQLCHAR*)SQLQuery, SQL_NTS)) {
+				// Executes a preparable statement
+				showSQLError(SQL_HANDLE_STMT, SQLStatementHandle);
+				break;
+			}
+			else {
+				int tid;
+				int a1;
+				int a2;
+			    double n1;
+				double n2;
+
+				while (SQLFetch(SQLStatementHandle) == SQL_SUCCESS) {
+					// Fetches the next rowset of data from the result
+					SQLGetData(SQLStatementHandle, 1, SQL_C_DEFAULT, &tid, sizeof(tid), NULL);
+					SQLGetData(SQLStatementHandle, 2, SQL_C_DEFAULT, &a1, sizeof(a1), NULL);
+					SQLGetData(SQLStatementHandle, 3, SQL_C_DEFAULT, &a2, sizeof(a2), NULL);
+					SQLGetData(SQLStatementHandle, 4, SQL_C_DEFAULT, &n1, sizeof(n1), NULL);
+					SQLGetData(SQLStatementHandle, 5, SQL_C_DEFAULT, &n2, sizeof(n2), NULL);
+					// Retrieves data for a single column in the result set
+					cout << tid << " " << a1 << " " << a2 << " " << n1 <<" "<<n2<< endl;
+
+				}
+
+
+
+			}
+		} while (FALSE);
+
+
+	SQLFreeHandle(SQL_HANDLE_STMT, SQLStatementHandle);
+	SQLDisconnect(SQLConnectionHandle);
+	SQLFreeHandle(SQL_HANDLE_DBC, SQLConnectionHandle);
+	SQLFreeHandle(SQL_HANDLE_ENV, SQLEnvHandle);
+	// Frees the resources and disconnects
+
+	getchar();
+
+	return 0;
+}
+
+int equi_depth()
+{
+	SQLHANDLE SQLEnvHandle = NULL;
+	SQLHANDLE SQLConnectionHandle = NULL;
+	SQLHANDLE SQLStatementHandle = NULL;
+	SQLRETURN retCode = 0;
+
+	char shw[] = "SELECT * FROM new";	
+	char SQLQuery[10000];
+
+
+	strcpy_s(SQLQuery, shw);
+	getchar();
+
+
+	do {
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &SQLEnvHandle))
+			// Allocates the environment
+			break;
+
+		if (SQL_SUCCESS != SQLSetEnvAttr(SQLEnvHandle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0))
+			// Sets attributes that govern aspects of environments
+			break;
+
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_DBC, SQLEnvHandle, &SQLConnectionHandle))
+			// Allocates the connection
+			break;
+
+		if (SQL_SUCCESS != SQLSetConnectAttr(SQLConnectionHandle, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0))
+			// Sets attributes that govern aspects of connections
+			break;
+
+		SQLCHAR retConString[1024]; // Conection string
+		switch (SQLDriverConnect(SQLConnectionHandle, NULL, (SQLCHAR*)"DRIVER={SQL Server}; SERVER=localhost, 1433; DATABASE=myDB; UID=myID; PWD=1234;", SQL_NTS, retConString, 1024, NULL, SQL_DRIVER_NOPROMPT)) {
+			// Establishes connections to a driver and a data source
+		case SQL_SUCCESS:
+			break;
+		case SQL_SUCCESS_WITH_INFO:
+			break;
+		case SQL_NO_DATA_FOUND:
+			showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+			retCode = -1;
+			break;
+		case SQL_INVALID_HANDLE:
+			showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+			retCode = -1;
+			break;
+		case SQL_ERROR:
+			showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+			retCode = -1;
+			break;
+		default:
+			break;
+		}
+
+		if (retCode == -1)
+			break;
+
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_STMT, SQLConnectionHandle, &SQLStatementHandle))
+			// Allocates the statement
+			break;
+
+		if (SQL_SUCCESS != SQLExecDirect(SQLStatementHandle, (SQLCHAR*)SQLQuery, SQL_NTS)) {
+			// Executes a preparable statement
+			showSQLError(SQL_HANDLE_STMT, SQLStatementHandle);
+			break;
+		}
+		else {
+			int tid;
+			int a1;
+			int a2;
+			double n1;
+			double n2;
+
+			while (SQLFetch(SQLStatementHandle) == SQL_SUCCESS) {
+				// Fetches the next rowset of data from the result
+				SQLGetData(SQLStatementHandle, 1, SQL_C_DEFAULT, &tid, sizeof(tid), NULL);
+				SQLGetData(SQLStatementHandle, 2, SQL_C_DEFAULT, &a1, sizeof(a1), NULL);
+				SQLGetData(SQLStatementHandle, 3, SQL_C_DEFAULT, &a2, sizeof(a2), NULL);
+				SQLGetData(SQLStatementHandle, 4, SQL_C_DEFAULT, &n1, sizeof(n1), NULL);
+				SQLGetData(SQLStatementHandle, 5, SQL_C_DEFAULT, &n2, sizeof(n2), NULL);
+				// Retrieves data for a single column in the result set
+				//cout << tid << " " << a1 << " " << a2 << " " << n1 << " " << n2 << endl;
+
+				A1.push_back(a1);
+				A2.push_back(a2);
+				N1.push_back(n1);
+				N2.push_back(n2);
+
+
+			}
+
+			vector<double>N11;
+			vector<double>N22;
+
+			N11 = N1;
+			N22 = N2;
+
+
+			sort(N11.begin(), N11.end());
+			sort(N22.begin(), N22.end());
+
+			BN1.push_back(N11[0]);
+			BN1.push_back(N11[5]);
+			BN1.push_back(N11[10]);
+			BN1.push_back(N11[15]);
+			BN1.push_back(N11[20]);
+
+			BN2.push_back(N22[0]);
+			BN2.push_back(N22[5]);
+			BN2.push_back(N22[10]);
+			BN2.push_back(N22[15]);
+			BN2.push_back(N22[20]);
+
+			PN1.push_back(BN1[0]);
+			PN1.push_back(BN1[2]);
+			PN1.push_back(BN1[4]);
+
+			PN2.push_back(BN2[0]);
+			PN2.push_back(BN2[2]);
+			PN2.push_back(BN2[4]);
+
+			cout << endl << "Bin Boundaries for N1: ";
+
+			for (int i = 0; i < BN1.size(); i++)
+			{
+				cout << BN1[i] << " ";
+			}
+
+			cout << endl;
+			cout << endl << "Bin Boundaries for N2: ";
+
+			for (int i = 0; i < BN2.size(); i++)
+			{
+				cout << BN2[i] << " ";
+			}
+			
+			cout << endl;
+
+			cout << endl << "Pseudo Boundaries for N1: ";
+
+			for (int i = 0; i < PN1.size(); i++)
+			{
+				cout << PN1[i] << " ";
+			}
+
+			cout << endl;
+			cout << endl << "Pseudo Boundaries for N2: ";
+
+			for (int i = 0; i < PN2.size(); i++)
+			{
+				cout << PN2[i] << " ";
+			}
+
+			cout << endl<<endl;
+
+
+
+			for (int t = 0; t < N1.size(); t++)
+			{
+				if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] >= BN2[0] && N2[t] <= BN2[1]) bid[1].push_back(t + 1),T[t+1]=1;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] >= BN2[0] && N2[t] <= BN2[1]) bid[2].push_back(t + 1), T[t + 1] = 2;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] >= BN2[0] && N2[t] <= BN2[1]) bid[3].push_back(t + 1), T[t + 1] = 3;
+				else if (N1[t] > BN1[3] && N1[t] <= BN1[4] && N2[t] >= BN2[0] && N2[t] <= BN2[1]) bid[4].push_back(t + 1),T[t + 1] = 4;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[1] && N2[t] <= BN2[2]) bid[5].push_back(t + 1), T[t + 1] = 5;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[1] && N2[t] <= BN2[2]) bid[6].push_back(t + 1), T[t + 1] = 6;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[1] && N2[t] <= BN2[2]) bid[7].push_back(t + 1), T[t + 1] = 7;
+				else if (N1[t] > BN1[3] && N1[t] <= BN1[4] && N2[t] > BN2[1] && N2[t] <= BN2[2]) bid[8].push_back(t + 1), T[t + 1] = 8;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[2] && N2[t] <= BN2[3]) bid[9].push_back(t + 1), T[t + 1] = 9;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[2] && N2[t] <= BN2[3]) bid[10].push_back(t + 1), T[t + 1] = 10;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[2] && N2[t] <= BN2[3]) bid[11].push_back(t + 1), T[t + 1] = 11;
+				else if (N1[t] > BN1[3] && N1[t] <= BN1[4] && N2[t] > BN2[2] && N2[t] <= BN2[3]) bid[12].push_back(t + 1), T[t + 1] = 12;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[3] && N2[t] <= BN2[4]) bid[13].push_back(t + 1), T[t + 1] = 13;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[3] && N2[t] <= BN2[4]) bid[14].push_back(t + 1), T[t + 1] = 14;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[3] && N2[t] <= BN2[4]) bid[15].push_back(t + 1), T[t + 1] = 15;
+				else if (N1[t] > BN1[3] && N1[t] <= BN1[4] && N2[t] > BN2[3] && N2[t] <= BN2[4]) bid[16].push_back(t + 1), T[t + 1] = 16;
+				
+				
+			}
+
+			for (int i = 1; i <= 16; i++)
+			{
+				cout << "bid" << i << ": ";
+
+				for (int j = 0; j < bid[i].size(); j++)
+				{
+					cout << bid[i][j] << " ";
+				}
+				cout << endl;
+			}
+
+			//for (int i = 1; i <= 21; i++) cout << "t" << i << ":" << T[i] << " ";
+
+			
+			for (int t = 0; t < N1.size(); t++)
+			{
+				if (N1[t] >= PN1[0] && N1[t] <= PN1[1] && N2[t] >= PN2[0] && N2[t] <= PN2[1]) pid[1].push_back(make_pair(t+1,T[t+1])),B[T[t+1]]=1 ;
+				else if (N1[t] > PN1[1] && N1[t] <= PN1[2] && N2[t] >= PN2[0] && N2[t] <= PN2[1]) pid[2].push_back(make_pair(t+1,T[t+1])),B[T[t+1]]=2;
+				else if (N1[t] >= PN1[0] && N1[t] <= PN1[1] && N2[t] > PN2[1] && N2[t] <= PN2[2]) pid[3].push_back(make_pair(t + 1, T[t + 1])),B[T[t+1]]=3;
+				else if (N1[t] > PN1[1] && N1[t] <= PN1[2] && N2[t] > PN2[1] && N2[t] <= PN2[2]) pid[4].push_back(make_pair(t + 1, T[t + 1])),B[T[t+1]]=4;
+			}
+
+
+			for (int i = 1; i <= 4; i++)
+			{
+				cout << "pid" << i << ": ";
+
+				for (int j = 0; j < pid[i].size(); j++)
+				{
+					cout << pid[i][j].first<<"("<<pid[i][j].second<<")" << " ";
+				}
+				cout << endl;
+			}
+
+
+			
+
+		}
+	} while (FALSE);
+
+
+	SQLFreeHandle(SQL_HANDLE_STMT, SQLStatementHandle);
+	SQLDisconnect(SQLConnectionHandle);
+	SQLFreeHandle(SQL_HANDLE_DBC, SQLConnectionHandle);
+	SQLFreeHandle(SQL_HANDLE_ENV, SQLEnvHandle);
+	// Frees the resources and disconnects
+
+	getchar();
+
+	return 0;
+}
+
+
+int neighbor_info()
+{
+	neighbor[1].nb1 = 2;
+	neighbor[1].x1 = BN1[1];
+	neighbor[1].y1 = BN2[0];
+	neighbor[1].nb2 = 5;
+	neighbor[1].x2 = BN1[0];
+	neighbor[1].y2 = BN2[1];
+
+	neighbor[2].nb1 = 3;
+	neighbor[2].x1 = BN1[2];
+	neighbor[2].y1 = BN2[0];
+	neighbor[2].nb2 = 6;
+	neighbor[2].x2 = BN1[1];
+	neighbor[2].y2 = BN2[1];
+
+	neighbor[3].nb1 = 4;
+	neighbor[3].x1 = BN1[3];
+	neighbor[3].y1 = BN2[0];
+	neighbor[3].nb2 = 7;
+	neighbor[3].x2 = BN1[2];
+	neighbor[3].y2 = BN2[1];
+
+	neighbor[4].nb1 = -1;
+	neighbor[4].x1 = -1;
+	neighbor[4].y1 = -1;
+	neighbor[4].nb2 = 8;
+	neighbor[4].x2 = BN1[3];
+	neighbor[4].y2 = BN2[1];
+
+	neighbor[5].nb1 = 6;
+	neighbor[5].x1 = BN1[1];
+	neighbor[5].y1 = BN2[1];
+	neighbor[5].nb2 = 9;
+	neighbor[5].x2 = BN1[0];
+	neighbor[5].y2 = BN2[2];
+
+	neighbor[6].nb1 = 7;
+	neighbor[6].x1 = BN1[2];
+	neighbor[6].y1 = BN2[1];
+	neighbor[6].nb2 = 10;
+	neighbor[6].x2 = BN1[1];
+	neighbor[6].y2 = BN2[2];
+
+	neighbor[7].nb1 = 8;
+	neighbor[7].x1 = BN1[3];
+	neighbor[7].y1 = BN2[1];
+	neighbor[7].nb2 = 11;
+	neighbor[7].x2 = BN1[2];
+	neighbor[7].y2 = BN2[2];
+
+	neighbor[8].nb1 = -1;
+	neighbor[8].x1 = -1;
+	neighbor[8].y1 = -1;
+	neighbor[8].nb2 = 12;
+	neighbor[8].x2 = BN1[3];
+	neighbor[8].y2 = BN2[2];
+
+	neighbor[9].nb1 = 10;
+	neighbor[9].x1 = BN1[1];
+	neighbor[9].y1 = BN2[2];
+	neighbor[9].nb2 = 13;
+	neighbor[9].x2 = BN1[0];
+	neighbor[9].y2 = BN2[3];
+
+	neighbor[10].nb1 = 11;
+	neighbor[10].x1 = BN1[2];
+	neighbor[10].y1 = BN2[2];
+	neighbor[10].nb2 = 14;
+	neighbor[10].x2 = BN1[1];
+	neighbor[10].y2 = BN2[3];
+
+	neighbor[11].nb1 = 12;
+	neighbor[11].x1 = BN1[3];
+	neighbor[11].y1 = BN2[2];
+	neighbor[11].nb2 = 15;
+	neighbor[11].x2 = BN1[2];
+	neighbor[11].y2 = BN2[3];
+
+	neighbor[12].nb1 = -1;
+	neighbor[12].x1 = -1;
+	neighbor[12].y1 = -1;
+	neighbor[12].nb2 = 16;
+	neighbor[12].x2 = BN1[3];
+	neighbor[12].y2 = BN2[3];
+
+	neighbor[13].nb1 = 14;
+	neighbor[13].x1 = BN1[1];
+	neighbor[13].y1 = BN2[3];
+	neighbor[13].nb2 = -1;
+	neighbor[13].x2 = -1;
+	neighbor[13].y2 = -1;
+
+	neighbor[14].nb1 = 15;
+	neighbor[14].x1 = BN1[2];
+	neighbor[14].y1 = BN2[3];
+	neighbor[14].nb2 = -1;
+	neighbor[14].x2 = -1;
+	neighbor[14].y2 = -1;
+
+	neighbor[15].nb1 = 16;
+	neighbor[15].x1 = BN1[3];
+	neighbor[15].y1 = BN2[3];
+	neighbor[15].nb2 = -1;
+	neighbor[15].x2 = -1;
+	neighbor[15].y2 = -1;
+
+	neighbor[16].nb1 = -1;
+	neighbor[16].x1 = -1;
+	neighbor[16].y1 = -1;
+	neighbor[16].nb2 = -1;
+	neighbor[16].x2 = -1;
+	neighbor[16].y2 = -1;
+
+
+	/*for (int i = 1; i <= 16; i++)
+	{
+		cout << neighbor[i].nb1 << " " << neighbor[i].x1 << " " << neighbor[i].y1 << " " << neighbor[i].nb2 << " " << neighbor[i].x2 << " " << neighbor[i].y2 <<endl;
+	}
+	cout << endl;
+
+	*/
+
+	return 0;
+
+}
+
+
+bool comp(pair<int, double>p1, pair<int, double>p2){
+	return p1.second < p2.second;
+}
+
+int top_k(int a1, int a2, int k)
+{
+	int candidate=1,temp_p;
+	double S_k, S_unseen;
+
+	//if (a1 == 1 && a2 == 1) candidate = 1,temp_p=1;
+	//else if (a1 == 1 && a2 == 2)candidate = 3, temp_p =2;
+	//else if (a1 == 2 && a2 == 1)candidate = 9, temp_p = 3;
+	//else if (a1 == 2 && a2 == 2)candidate = 11, temp_p = 4;
+
+
+	int p_check[25];
+	int b_check[25];
+	int t_check[25];
+
+	for (int i = 0; i < 25; i++)
+	{
+		//p_check[i] = 0;
+		b_check[i] = 0;
+		t_check[i] = 0;
+	}
+
+
+	b_check[1] = 1;
+
+	vector< pair<int, double> >S;
+	vector< pair<int, double> >H;
+
+
+	while (1)
+	{
+		
+		temp_p = B[candidate];
+		
+		for (int i = 0; i < pid[temp_p].size(); i++)
+		{
+			if (pid[temp_p][i].second == candidate && t_check[pid[temp_p][i].first] == 0 && A1[pid[temp_p][i].first-1] == a1 && A2[pid[temp_p][i].first-1] == a2)
+			{
+				double score = N1[pid[temp_p][i].first-1] + N2[pid[temp_p][i].first-1];
+				
+				S.push_back(make_pair(pid[temp_p][i].first, score));
+
+				t_check[pid[temp_p][i].first] = 1;
+			}
+		}
+
+		sort(S.begin(), S.end(), comp);
+		
+		cout << "S list:";
+		for (int i = 0; i<S.size(); i++)
+		{
+			cout << "f(t"<<S[i].first<<")="<<S[i].second<<" ";
+		}
+		cout << endl;
+
+		if (neighbor[candidate].nb1 > 0 && b_check[neighbor[candidate].nb1] == 0)
+		{
+			H.push_back(make_pair(neighbor[candidate].nb1, neighbor[candidate].x1 + neighbor[candidate].y1));
+			b_check[neighbor[candidate].nb1] = 1;
+		}
+		if (neighbor[candidate].nb2 > 0 && b_check[neighbor[candidate].nb2] == 0)
+		{
+			H.push_back(make_pair(neighbor[candidate].nb2, neighbor[candidate].x2 + neighbor[candidate].y2));
+			b_check[neighbor[candidate].nb2] = 1;
+		}
+		if (H.size() == 0) break;
+		sort(H.begin(), H.end(), comp);
+
+		cout << "H list:";
+		for (int i = 0; i<H.size(); i++)
+		{   
+			
+		 cout << "f(b" << H[i].first << ")=" << H[i].second << " ";
+		}
+		cout << endl;
+
+		candidate = H[0].first;
+
+		if (S.size() == 0) S_k = 0;
+		else if(k<=S.size()) S_k = S[k-1].second;
+		else S_k = S[S.size() - 1].second;
+
+		S_unseen = H[0].second;
+
+		cout << " sk:" << S_k << "sunseen:" << S_unseen << endl;
+
+		H.erase(H.begin());
+
+		if (S_k <= S_unseen && S.size()==k ) break;
+		//if (H.size() == 0) break;
+
+	}
+
+	cout <<endl <<"Selected tuples are : ";
+
+	if (k > S.size()) k = S.size();
+
+	for (int i = 0; i < k; i++)
+	{
+		cout << S[i].first << " ";
+	}
+	return 0;
+}
+
+
+int main()
+{
+	//func(3);
+	//func(4);
+	//func(1);
+	equi_depth();
+    neighbor_info(); 
+	top_k(2, 1,5);
+
+	//for (int i = 1; i <= 16; i++) cout << i << ": " << B[i] << endl;
+
+	
+	getchar();
+}
