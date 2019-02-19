@@ -1,0 +1,2451 @@
+#include "stdafx.h"
+#include <iostream>
+#include <windows.h>
+#include <sqlext.h>
+#include <sqltypes.h>
+#include <sql.h>
+#include<string.h>
+#include "stdc++.h"
+#include <chrono>
+
+using namespace std;
+using namespace std::chrono;
+
+vector<int>Serial;
+vector<string>Name;
+
+vector<string>A1;
+vector<string>A2;
+vector<string>A3;
+vector<double>N1;
+vector<double>N2;
+vector<double>N3;
+vector<double>N4;
+
+vector<double>BN1;
+vector<double>BN2;
+vector<double>BN3;
+vector<double>BN4;
+
+vector<double>PN1;
+vector<double>PN2;
+vector<double>PN3;
+vector<double>PN4;
+
+vector<int>bid[85];
+vector< pair<int, int> >pid[20];
+
+int T[15000];
+int B[85];
+
+struct info{
+	int nb1;
+	double x1;
+	double y1;
+	double z1;
+	double w1;
+
+	int nb2;
+	double x2;
+	double y2;
+	double z2;
+	double w2;
+
+	int nb3;
+	double x3;
+	double y3;
+	double z3;
+	double w3;
+
+	int nb4;
+	double x4;
+	double y4;
+	double z4;
+	double w4;
+
+};
+
+info neighbor[85];
+
+
+void showSQLError(unsigned int handleType, const SQLHANDLE& handle)
+{
+	SQLCHAR SQLState[1024];
+	SQLCHAR message[1024];
+	if (SQL_SUCCESS == SQLGetDiagRec(handleType, handle, 1, SQLState, NULL, message, 1024, NULL))
+		// Returns the current values of multiple fields of a diagnostic record that contains error, warning, and status information
+		cout << "SQL driver message: " << message << "\nSQL state: " << SQLState << "." << endl;
+}
+
+int func(int input)
+{
+	SQLHANDLE SQLEnvHandle = NULL;
+	SQLHANDLE SQLConnectionHandle = NULL;
+	SQLHANDLE SQLStatementHandle = NULL;
+	SQLRETURN retCode = 0;
+
+	char shw[] = "SELECT TOP 100 APPLICATION_SN,APPLICANT_NAME,PRE_DIVISION,PRE_DISTRICT,PRE_THANA,SSC_GPA_MARKS_OBTAINED,HSC_GPA_MARKS_OBTAINED,HSC_TOTAL,HSC_MATH_GP FROM admission WHERE PRE_DIVISION='Dhaka' and PRE_DISTRICT='Dhaka' and PRE_THANA='Mirpur' ORDER BY ((SSC_GPA_MARKS_OBTAINED+HSC_GPA_MARKS_OBTAINED+HSC_TOTAL+HSC_MATH_GP))  ";
+	char shw1[] = "SELECT TOP 10 APPLICATION_SN,APPLICANT_NAME,PRE_DIVISION,PRE_DISTRICT,PRE_THANA,SSC_GPA_MARKS_OBTAINED,HSC_GPA_MARKS_OBTAINED,HSC_TOTAL FROM admission WHERE PRE_DIVISION='Khulna' and PRE_DISTRICT='Kushtia' and PRE_THANA='Dowlotpur' ORDER BY ((SSC_GPA_MARKS_OBTAINED-HSC_GPA_MARKS_OBTAINED)*(HSC_TOTAL))  ";
+	char insrt[] = "INSERT INTO people3 VALUES('raju',28)";
+	char crt_tbl[] = "CREATE TABLE [dbo].[sample](tid INT, a1 INT , a2 INT , n1 FLOAT , n2 FLOAT ) ";
+	char ifile[] = "BULK INSERT sample FROM 'F:\\datacube\\inn.txt' WITH(FIELDTERMINATOR = ',',ROWTERMINATOR = '\n')";
+	//char cube_gen[] = "select model, year, color, sum(amount)  from sales group by color, year, model with CUBE";
+	char cube_gen[] = "insert into sales1(model,year,color,amount) select model, year, color, sum(amount)  from sales group by color, year, model with CUBE";
+	//char cube_gen[] = "select case when model is null  then 'ALL' when year is null then 'ALL' when color is null then 'ALL' end model, coalesce(model, '') model, year, color, sum(amount) from sales group by color, year, model with CUBE";
+	char SQLQuery[10000];
+	//int input;
+	//cout << " 1. show" << endl;
+	//cout << " 2. insert" << endl;
+	//cout << " 3. Create a table" << endl;
+	//cout << " 4. take input from file" << endl;
+	//cin >> input;
+	if (input == 1)
+	{
+		strcpy_s(SQLQuery, shw);
+	}
+	else if (input == 2)
+	{
+		strcpy_s(SQLQuery, shw1);
+	}
+	else if (input == 3)
+	{
+		strcpy_s(SQLQuery, crt_tbl);
+	}
+	else if (input == 4)
+	{
+		strcpy_s(SQLQuery, ifile);
+	}
+	else if (input == 5)
+	{
+		strcpy_s(SQLQuery, cube_gen);
+	}
+	//getchar();
+	do {
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &SQLEnvHandle))
+			// Allocates the environment
+			break;
+		if (SQL_SUCCESS != SQLSetEnvAttr(SQLEnvHandle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0))
+			// Sets attributes that govern aspects of environments
+			break;
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_DBC, SQLEnvHandle, &SQLConnectionHandle))
+			// Allocates the connection
+			break;
+		if (SQL_SUCCESS != SQLSetConnectAttr(SQLConnectionHandle, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0))
+			// Sets attributes that govern aspects of connections
+			break;
+		SQLCHAR retConString[1024]; // Conection string
+		switch (SQLDriverConnect(SQLConnectionHandle, NULL, (SQLCHAR*)"DRIVER={SQL Server}; SERVER=localhost, 1433; DATABASE=myDB; UID=myID; PWD=1234;", SQL_NTS, retConString, 1024, NULL, SQL_DRIVER_NOPROMPT)) {
+			// Establishes connections to a driver and a data source
+		case SQL_SUCCESS:
+			break;
+		case SQL_SUCCESS_WITH_INFO:
+			break;
+		case SQL_NO_DATA_FOUND:
+			showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+			retCode = -1;
+			break;
+		case SQL_INVALID_HANDLE:
+			showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+			retCode = -1;
+			break;
+		case SQL_ERROR:
+			showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+			retCode = -1;
+			break;
+		default:
+			break;
+		}
+		if (retCode == -1)
+			break;
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_STMT, SQLConnectionHandle, &SQLStatementHandle))
+			// Allocates the statement
+			break;
+		if (SQL_SUCCESS != SQLExecDirect(SQLStatementHandle, (SQLCHAR*)SQLQuery, SQL_NTS)) {
+			// Executes a preparable statement
+			showSQLError(SQL_HANDLE_STMT, SQLStatementHandle);
+			break;
+		}
+		else {
+			int sn;
+			char name[100];
+			char a1[100];
+			char a2[100];
+			char a3[100];
+			double n1;
+			double n2;
+			double n3;
+
+			while (SQLFetch(SQLStatementHandle) == SQL_SUCCESS) {
+				// Fetches the next rowset of data from the result
+
+
+				SQLGetData(SQLStatementHandle, 1, SQL_C_DEFAULT, &sn, sizeof(sn), NULL);
+				SQLGetData(SQLStatementHandle, 2, SQL_C_DEFAULT, &name, sizeof(name), NULL);
+				SQLGetData(SQLStatementHandle, 3, SQL_C_DEFAULT, &a1, sizeof(a1), NULL);
+				SQLGetData(SQLStatementHandle, 4, SQL_C_DEFAULT, &a2, sizeof(a2), NULL);
+				SQLGetData(SQLStatementHandle, 5, SQL_C_DEFAULT, &a3, sizeof(a3), NULL);
+				SQLGetData(SQLStatementHandle, 6, SQL_C_DEFAULT, &n1, sizeof(n1), NULL);
+				SQLGetData(SQLStatementHandle, 7, SQL_C_DEFAULT, &n2, sizeof(n2), NULL);
+				SQLGetData(SQLStatementHandle, 8, SQL_C_DEFAULT, &n3, sizeof(n3), NULL);
+			
+				cout << sn << " " << name << " " << a1 << " " << a2 << " " << a3 << " " << n1 << " " << n2 << " " << n3 << endl;
+
+
+			}
+		}
+	} while (FALSE);
+	SQLFreeHandle(SQL_HANDLE_STMT, SQLStatementHandle);
+	SQLDisconnect(SQLConnectionHandle);
+	SQLFreeHandle(SQL_HANDLE_DBC, SQLConnectionHandle);
+	SQLFreeHandle(SQL_HANDLE_ENV, SQLEnvHandle);
+	// Frees the resources and disconnects
+	//getchar();
+	return 0;
+}
+
+int equi_depth()
+{
+	SQLHANDLE SQLEnvHandle = NULL;
+	SQLHANDLE SQLConnectionHandle = NULL;
+	SQLHANDLE SQLStatementHandle = NULL;
+	SQLRETURN retCode = 0;
+
+	char shw[] = "SELECT * FROM admission";	
+	char SQLQuery[10000];
+
+
+	strcpy_s(SQLQuery, shw);
+	//getchar();
+
+
+	do {
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &SQLEnvHandle))
+			// Allocates the environment
+			break;
+
+		if (SQL_SUCCESS != SQLSetEnvAttr(SQLEnvHandle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0))
+			// Sets attributes that govern aspects of environments
+			break;
+
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_DBC, SQLEnvHandle, &SQLConnectionHandle))
+			// Allocates the connection
+			break;
+
+		if (SQL_SUCCESS != SQLSetConnectAttr(SQLConnectionHandle, SQL_LOGIN_TIMEOUT, (SQLPOINTER)5, 0))
+			// Sets attributes that govern aspects of connections
+			break;
+
+		SQLCHAR retConString[1024]; // Conection string
+		switch (SQLDriverConnect(SQLConnectionHandle, NULL, (SQLCHAR*)"DRIVER={SQL Server}; SERVER=localhost, 1433; DATABASE=myDB; UID=myID; PWD=1234;", SQL_NTS, retConString, 1024, NULL, SQL_DRIVER_NOPROMPT)) {
+			// Establishes connections to a driver and a data source
+		case SQL_SUCCESS:
+			break;
+		case SQL_SUCCESS_WITH_INFO:
+			break;
+		case SQL_NO_DATA_FOUND:
+			showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+			retCode = -1;
+			break;
+		case SQL_INVALID_HANDLE:
+			showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+			retCode = -1;
+			break;
+		case SQL_ERROR:
+			showSQLError(SQL_HANDLE_DBC, SQLConnectionHandle);
+			retCode = -1;
+			break;
+		default:
+			break;
+		}
+
+		if (retCode == -1)
+			break;
+
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_STMT, SQLConnectionHandle, &SQLStatementHandle))
+			// Allocates the statement
+			break;
+
+		if (SQL_SUCCESS != SQLExecDirect(SQLStatementHandle, (SQLCHAR*)SQLQuery, SQL_NTS)) {
+			// Executes a preparable statement
+			showSQLError(SQL_HANDLE_STMT, SQLStatementHandle);
+			break;
+		}
+		else {
+			int sn;
+			char name[100];
+			char a1[100];
+			char a2[100];
+			char a3[100];
+			double n1;
+			double n2;
+			double n3;
+			double n4;
+
+			while (SQLFetch(SQLStatementHandle) == SQL_SUCCESS) {
+				// Fetches the next rowset of data from the result
+				
+
+				SQLGetData(SQLStatementHandle, 1, SQL_C_DEFAULT, &sn, sizeof(sn), NULL);
+				SQLGetData(SQLStatementHandle, 2, SQL_C_DEFAULT, &name, sizeof(name), NULL);
+				SQLGetData(SQLStatementHandle, 3, SQL_C_DEFAULT, &a1, sizeof(a1), NULL);
+				SQLGetData(SQLStatementHandle, 4, SQL_C_DEFAULT, &a2, sizeof(a2), NULL);
+				SQLGetData(SQLStatementHandle, 5, SQL_C_DEFAULT, &a3, sizeof(a3), NULL);
+				SQLGetData(SQLStatementHandle, 6, SQL_C_DEFAULT, &n1, sizeof(n1), NULL);
+				SQLGetData(SQLStatementHandle, 7, SQL_C_DEFAULT, &n2, sizeof(n2), NULL);
+				SQLGetData(SQLStatementHandle, 8, SQL_C_DEFAULT, &n3, sizeof(n3), NULL);
+				SQLGetData(SQLStatementHandle, 9, SQL_C_DEFAULT, &n4, sizeof(n4), NULL);
+				// Retrieves data for a single column in the result set
+				//cout << sn << " " << a1 << " " << a2 << " " << n1 << " " << n2 << endl;
+
+
+				Serial.push_back(sn);
+				Name.push_back(name);
+				A1.push_back(a1);
+				A2.push_back(a2);
+				A3.push_back(a3);
+				N1.push_back(n1);
+				N2.push_back(n2);
+				N3.push_back(n3);
+				N4.push_back(n4);
+				
+
+
+			}
+
+
+			BN1.push_back(0);
+			//BN1.push_back(4.33);
+			BN1.push_back(4.55);
+			BN1.push_back(4.75);
+			BN1.push_back(10.00);
+
+			BN2.push_back(0);
+		//	BN2.push_back(4.5);
+			BN2.push_back(4.67);
+			BN2.push_back(4.92);
+			BN2.push_back(92.80);
+
+			BN3.push_back(0);
+			//BN3.push_back(18.5);
+			BN3.push_back(19.00);
+			BN3.push_back(20.00);
+			BN3.push_back(280.00);
+
+			BN4.push_back(0);
+			//BN3.push_back(3.5);
+			BN4.push_back(4.00);
+			BN4.push_back(5.00);
+			BN4.push_back(95.00);
+
+
+			PN1.push_back(0);
+			PN1.push_back(4.65);
+			PN1.push_back(10.00);
+
+			PN2.push_back(0);
+			PN2.push_back(4.80);
+			PN2.push_back(92.80);
+
+			PN3.push_back(0);
+			PN3.push_back(19.50);
+			PN3.push_back(280.00);
+            
+			PN4.push_back(0);
+			PN4.push_back(4.50);
+			PN4.push_back(95.00);
+
+
+
+			///ei porjonto modify kora hoise ajk////
+
+	//		cout << endl << "Bin Boundaries for N1: ";
+
+		/*	for (int i = 0; i < BN1.size(); i++)
+			{
+				cout << BN1[i] << " ";
+			}
+			*/
+			cout << endl;
+//			cout << endl << "Bin Boundaries for N2: ";
+
+/*			for (int i = 0; i < BN2.size(); i++)
+			{
+				cout << BN2[i] << " ";
+			}
+			
+			cout << endl;
+			*/
+		/*	cout << endl << "Bin Boundaries for N3: ";
+
+			for (int i = 0; i < BN3.size(); i++)
+			{
+				cout << BN3[i] << " ";
+			}
+
+			cout << endl;
+
+			cout << endl << "Pseudo Boundaries for N1: ";
+
+			for (int i = 0; i < PN1.size(); i++)
+			{
+				cout << PN1[i] << " ";
+			}
+
+			cout << endl;
+			cout << endl << "Pseudo Boundaries for N2: ";
+
+			for (int i = 0; i < PN2.size(); i++)
+			{
+				cout << PN2[i] << " ";
+			}
+
+			cout << endl<<endl;
+
+			cout << endl << "Pseudo Boundaries for N3: ";
+
+			for (int i = 0; i < PN3.size(); i++)
+			{
+				cout << PN3[i] << " ";
+			}
+
+			cout << endl << endl;
+
+			*/
+
+			for (int t = 0; t < N1.size(); t++)
+			{
+				if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[1].push_back(t + 1), T[t + 1] = 1;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[2].push_back(t + 1), T[t + 1] = 2;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[3].push_back(t + 1), T[t + 1] = 3;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[4].push_back(t + 1), T[t + 1] = 4;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[5].push_back(t + 1), T[t + 1] = 5;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[6].push_back(t + 1), T[t + 1] = 6;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[7].push_back(t + 1), T[t + 1] = 7;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[8].push_back(t + 1), T[t + 1] = 8;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[9].push_back(t + 1), T[t + 1] = 9;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[10].push_back(t + 1), T[t + 1] = 10;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[11].push_back(t + 1), T[t + 1] = 11;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[12].push_back(t + 1), T[t + 1] = 12;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[13].push_back(t + 1), T[t + 1] = 13;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[14].push_back(t + 1), T[t + 1] = 14;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[15].push_back(t + 1), T[t + 1] = 15;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[16].push_back(t + 1), T[t + 1] = 16;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[17].push_back(t + 1), T[t + 1] = 17;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[18].push_back(t + 1), T[t + 1] = 18;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[19].push_back(t + 1), T[t + 1] = 19;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[20].push_back(t + 1), T[t + 1] = 20;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[21].push_back(t + 1), T[t + 1] = 21;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[22].push_back(t + 1), T[t + 1] = 22;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[23].push_back(t + 1), T[t + 1] = 23;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[24].push_back(t + 1), T[t + 1] = 24;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[25].push_back(t + 1), T[t + 1] = 25;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[26].push_back(t + 1), T[t + 1] = 26;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] >= BN4[0] && N4[t] <= BN4[1]) bid[27].push_back(t + 1), T[t + 1] = 27;
+				
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[28].push_back(t + 1), T[t + 1] = 28;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[29].push_back(t + 1), T[t + 1] = 29;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[30].push_back(t + 1), T[t + 1] = 30;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[31].push_back(t + 1), T[t + 1] = 31;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[32].push_back(t + 1), T[t + 1] = 32;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[33].push_back(t + 1), T[t + 1] = 33;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[34].push_back(t + 1), T[t + 1] = 34;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[35].push_back(t + 1), T[t + 1] = 35;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[36].push_back(t + 1), T[t + 1] = 36;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[37].push_back(t + 1), T[t + 1] = 37;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[38].push_back(t + 1), T[t + 1] = 38;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[39].push_back(t + 1), T[t + 1] = 39;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[40].push_back(t + 1), T[t + 1] = 40;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[41].push_back(t + 1), T[t + 1] = 41;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[42].push_back(t + 1), T[t + 1] = 42;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[43].push_back(t + 1), T[t + 1] = 43;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[44].push_back(t + 1), T[t + 1] = 44;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[45].push_back(t + 1), T[t + 1] = 45;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[46].push_back(t + 1), T[t + 1] = 46;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[47].push_back(t + 1), T[t + 1] = 47;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[48].push_back(t + 1), T[t + 1] = 48;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[49].push_back(t + 1), T[t + 1] = 49;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[50].push_back(t + 1), T[t + 1] = 50;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[51].push_back(t + 1), T[t + 1] = 51;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[52].push_back(t + 1), T[t + 1] = 52;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[53].push_back(t + 1), T[t + 1] = 53;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[1] && N4[t] <= BN4[2]) bid[54].push_back(t + 1), T[t + 1] = 54;
+
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[55].push_back(t + 1), T[t + 1] = 55;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[56].push_back(t + 1), T[t + 1] = 56;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[57].push_back(t + 1), T[t + 1] = 57;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[58].push_back(t + 1), T[t + 1] = 58;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[59].push_back(t + 1), T[t + 1] = 59;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[60].push_back(t + 1), T[t + 1] = 60;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[61].push_back(t + 1), T[t + 1] = 61;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[62].push_back(t + 1), T[t + 1] = 62;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] >= BN3[0] && N3[t] <= BN3[1] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[63].push_back(t + 1), T[t + 1] = 63;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[64].push_back(t + 1), T[t + 1] = 64;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[65].push_back(t + 1), T[t + 1] = 65;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[66].push_back(t + 1), T[t + 1] = 66;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[67].push_back(t + 1), T[t + 1] = 67;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[68].push_back(t + 1), T[t + 1] = 68;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[69].push_back(t + 1), T[t + 1] = 69;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[70].push_back(t + 1), T[t + 1] = 70;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[71].push_back(t + 1), T[t + 1] = 71;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[1] && N3[t] <= BN3[2] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[72].push_back(t + 1), T[t + 1] = 72;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[73].push_back(t + 1), T[t + 1] = 73;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[74].push_back(t + 1), T[t + 1] = 74;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] >= BN2[0] && N2[t] <= BN2[1] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[75].push_back(t + 1), T[t + 1] = 75;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[76].push_back(t + 1), T[t + 1] = 76;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[77].push_back(t + 1), T[t + 1] = 77;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[1] && N2[t] <= BN2[2] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[78].push_back(t + 1), T[t + 1] = 78;
+				else if (N1[t] >= BN1[0] && N1[t] <= BN1[1] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[79].push_back(t + 1), T[t + 1] = 79;
+				else if (N1[t] > BN1[1] && N1[t] <= BN1[2] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[80].push_back(t + 1), T[t + 1] = 80;
+				else if (N1[t] > BN1[2] && N1[t] <= BN1[3] && N2[t] > BN2[2] && N2[t] <= BN2[3] && N3[t] > BN3[2] && N3[t] <= BN3[3] && N4[t] > BN4[2] && N4[t] <= BN4[3]) bid[81].push_back(t + 1), T[t + 1] = 81;
+
+                				
+			}
+			
+/*			for (int i = 1; i <= 64; i++)
+			{
+				cout << "bid" << i << ": ";
+
+				for (int j = 0; j < bid[i].size(); j++)
+				{
+					cout << bid[i][j] << " ";
+				}
+				cout << endl;
+			}
+			
+			//for (int i = 1; i <= 21; i++) cout << "t" << i << ":" << T[i] << " ";
+
+	*/		
+			for (int t = 0; t < N1.size(); t++)
+			{
+				if (N1[t] >= PN1[0] && N1[t] <= PN1[1] && N2[t] >= PN2[0] && N2[t] <= PN2[1] && N3[t] >= PN3[0] && N3[t] <= PN3[1] && N4[t] >= PN4[0] && N4[t] <= PN4[1]) pid[1].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 1;
+				else if (N1[t] > PN1[1] && N1[t] <= PN1[2] && N2[t] >= PN2[0] && N2[t] <= PN2[1] && N3[t] >= PN3[0] && N3[t] <= PN3[1] && N4[t] >= PN4[0] && N4[t] <= PN4[1]) pid[2].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 2;
+				else if (N1[t] >= PN1[0] && N1[t] <= PN1[1] && N2[t] > PN2[1] && N2[t] <= PN2[2] && N3[t] >= PN3[0] && N3[t] <= PN3[1] && N4[t] >= PN4[0] && N4[t] <= PN4[1]) pid[3].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 3;
+				else if (N1[t] > PN1[1] && N1[t] <= PN1[2] && N2[t] > PN2[1] && N2[t] <= PN2[2] && N3[t] >= PN3[0] && N3[t] <= PN3[1] && N4[t] >= PN4[0] && N4[t] <= PN4[1]) pid[4].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 4;
+
+				else if (N1[t] >= PN1[0] && N1[t] <= PN1[1] && N2[t] >= PN2[0] && N2[t] <= PN2[1] && N3[t] > PN3[1] && N3[t] <= PN3[2] && N4[t] >= PN4[0] && N4[t] <= PN4[1]) pid[5].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 5;
+				else if (N1[t] > PN1[1] && N1[t] <= PN1[2] && N2[t] >= PN2[0] && N2[t] <= PN2[1] && N3[t] > PN3[1] && N3[t] <= PN3[2] && N4[t] >= PN4[0] && N4[t] <= PN4[1]) pid[6].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 6;
+				else if (N1[t] >= PN1[0] && N1[t] <= PN1[1] && N2[t] > PN2[1] && N2[t] <= PN2[2] && N3[t] > PN3[1] && N3[t] <= PN3[2] && N4[t] >= PN4[0] && N4[t] <= PN4[1]) pid[7].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 7;
+				else if (N1[t] > PN1[1] && N1[t] <= PN1[2] && N2[t] > PN2[1] && N2[t] <= PN2[2] && N3[t] > PN3[1] && N3[t] <= PN3[2] && N4[t] >= PN4[0] && N4[t] <= PN4[1]) pid[8].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 8;
+
+				if (N1[t] >= PN1[0] && N1[t] <= PN1[1] && N2[t] >= PN2[0] && N2[t] <= PN2[1] && N3[t] >= PN3[0] && N3[t] <= PN3[1] && N4[t] > PN4[1] && N4[t] <= PN4[2]) pid[9].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 9;
+				else if (N1[t] > PN1[1] && N1[t] <= PN1[2] && N2[t] >= PN2[0] && N2[t] <= PN2[1] && N3[t] >= PN3[0] && N3[t] <= PN3[1] && N4[t] > PN4[1] && N4[t] <= PN4[2]) pid[10].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 10;
+				else if (N1[t] >= PN1[0] && N1[t] <= PN1[1] && N2[t] > PN2[1] && N2[t] <= PN2[2] && N3[t] >= PN3[0] && N3[t] <= PN3[1] && N4[t] > PN4[1] && N4[t] <= PN4[2]) pid[11].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 11;
+				else if (N1[t] > PN1[1] && N1[t] <= PN1[2] && N2[t] > PN2[1] && N2[t] <= PN2[2] && N3[t] >= PN3[0] && N3[t] <= PN3[1] && N4[t] > PN4[1] && N4[t] <= PN4[2]) pid[12].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 12;
+
+				else if (N1[t] >= PN1[0] && N1[t] <= PN1[1] && N2[t] >= PN2[0] && N2[t] <= PN2[1] && N3[t] > PN3[1] && N3[t] <= PN3[2] && N4[t] > PN4[1] && N4[t] <= PN4[2]) pid[13].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 13;
+				else if (N1[t] > PN1[1] && N1[t] <= PN1[2] && N2[t] >= PN2[0] && N2[t] <= PN2[1] && N3[t] > PN3[1] && N3[t] <= PN3[2] && N4[t] > PN4[1] && N4[t] <= PN4[2]) pid[14].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 14;
+				else if (N1[t] >= PN1[0] && N1[t] <= PN1[1] && N2[t] > PN2[1] && N2[t] <= PN2[2] && N3[t] > PN3[1] && N3[t] <= PN3[2] && N4[t] > PN4[1] && N4[t] <= PN4[2]) pid[15].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 15;
+				else if (N1[t] > PN1[1] && N1[t] <= PN1[2] && N2[t] > PN2[1] && N2[t] <= PN2[2] && N3[t] > PN3[1] && N3[t] <= PN3[2] && N4[t] > PN4[1] && N4[t] <= PN4[2]) pid[16].push_back(make_pair(t + 1, T[t + 1])), B[T[t + 1]] = 16;
+
+			}
+
+
+		/*	for (int i = 1; i <= 8; i++)
+			{
+				cout << "pid" << i << ": ";
+
+				for (int j = 0; j < pid[i].size(); j++)
+				{
+					cout << pid[i][j].first<<"("<<pid[i][j].second<<")" << " ";
+				}
+				cout << endl;
+			}
+
+			*/
+			
+
+		}
+	} while (FALSE);
+
+
+	SQLFreeHandle(SQL_HANDLE_STMT, SQLStatementHandle);
+	SQLDisconnect(SQLConnectionHandle);
+	SQLFreeHandle(SQL_HANDLE_DBC, SQLConnectionHandle);
+	SQLFreeHandle(SQL_HANDLE_ENV, SQLEnvHandle);
+	// Frees the resources and disconnects
+
+	//getchar();
+
+	return 0;
+}
+
+
+int neighbor_info()
+{
+
+	neighbor[1].nb1 = 2;
+	neighbor[1].x1 = BN1[1];
+	neighbor[1].y1 = BN2[0];
+	neighbor[1].z1 = BN3[0];
+	neighbor[1].w1 = BN4[0];
+	neighbor[1].nb2 = 4;
+	neighbor[1].x2 = BN1[0];
+	neighbor[1].y2 = BN2[1];
+	neighbor[1].z2 = BN3[0];
+	neighbor[1].w2 = BN4[0];
+	neighbor[1].nb3 = 10;
+	neighbor[1].x3 = BN1[0];
+	neighbor[1].y3 = BN2[0];
+	neighbor[1].z3 = BN3[1];
+	neighbor[1].w3 = BN4[0];
+	neighbor[1].nb4 = 28;
+	neighbor[1].x4 = BN1[0];
+	neighbor[1].y4 = BN2[0];
+	neighbor[1].z4 = BN3[0];
+	neighbor[1].w4 = BN4[1];
+
+	neighbor[2].nb1 = 3;
+	neighbor[2].x1 = BN1[2];
+	neighbor[2].y1 = BN2[0];
+	neighbor[2].z1 = BN3[0];
+	neighbor[2].w1 = BN4[0];
+	neighbor[2].nb2 = 5;
+	neighbor[2].x2 = BN1[1];
+	neighbor[2].y2 = BN2[1];
+	neighbor[2].z2 = BN3[0];
+	neighbor[2].w2 = BN4[0];
+	neighbor[2].nb3 = 11;
+	neighbor[2].x3 = BN1[1];
+	neighbor[2].y3 = BN2[0];
+	neighbor[2].z3 = BN3[1];
+	neighbor[2].w3 = BN4[0];
+	neighbor[2].nb4 = 29;
+	neighbor[2].x4 = BN1[1];
+	neighbor[2].y4 = BN2[0];
+	neighbor[2].z4 = BN3[0];
+	neighbor[2].w4 = BN4[1];
+
+
+	neighbor[3].nb1 = -1;
+	neighbor[3].x1 = -1;
+	neighbor[3].y1 = -1;
+	neighbor[3].z1 = -1;
+	neighbor[3].w1 = -1;
+	neighbor[3].nb2 = 6;
+	neighbor[3].x2 = BN1[2];
+	neighbor[3].y2 = BN2[1];
+	neighbor[3].z2 = BN3[0];
+	neighbor[3].w2 = BN4[0];
+	neighbor[3].nb3 = 12;
+	neighbor[3].x3 = BN1[2];
+	neighbor[3].y3 = BN2[0];
+	neighbor[3].z3 = BN3[1];
+	neighbor[3].w3 = BN4[0];
+	neighbor[3].nb4 = 30;
+	neighbor[3].x4 = BN1[2];
+	neighbor[3].y4 = BN2[0];
+	neighbor[3].z4 = BN3[0];
+	neighbor[3].w4 = BN4[1];
+
+	neighbor[4].nb1 = 5;
+	neighbor[4].x1 = BN1[1];
+	neighbor[4].y1 = BN2[1];
+	neighbor[4].z1 = BN3[0];
+	neighbor[4].w1 = BN4[0];
+	neighbor[4].nb2 = 7;
+	neighbor[4].x2 = BN1[0];
+	neighbor[4].y2 = BN2[2];
+	neighbor[4].z2 = BN3[0];
+	neighbor[4].w2 = BN4[0];
+	neighbor[4].nb3 = 13;
+	neighbor[4].x3 = BN1[0];
+	neighbor[4].y3 = BN2[1];
+	neighbor[4].z3 = BN3[1];
+	neighbor[4].w3 = BN4[0];
+	neighbor[4].nb4 = 31;
+	neighbor[4].x4 = BN1[0];
+	neighbor[4].y4 = BN2[1];
+	neighbor[4].z4 = BN3[0];
+	neighbor[4].w4 = BN4[1];
+
+
+	neighbor[5].nb1 = 6;
+	neighbor[5].x1 = BN1[2];
+	neighbor[5].y1 = BN2[1];
+	neighbor[5].z1 = BN3[0];
+	neighbor[5].w1 = BN4[0];
+	neighbor[5].nb2 = 8;
+	neighbor[5].x2 = BN1[1];
+	neighbor[5].y2 = BN2[2];
+	neighbor[5].z2 = BN3[0];
+	neighbor[5].w2 = BN4[0];
+	neighbor[5].nb3 = 14;
+	neighbor[5].x3 = BN1[1];
+	neighbor[5].y3 = BN2[1];
+	neighbor[5].z3 = BN3[1];
+	neighbor[5].w3 = BN4[0];
+	neighbor[5].nb4 = 32;
+	neighbor[5].x4 = BN1[1];
+	neighbor[5].y4 = BN2[1];
+	neighbor[5].z4 = BN3[0];
+	neighbor[5].w4 = BN4[1];
+
+	neighbor[6].nb1 = -1;
+	neighbor[6].x1 = -1;
+	neighbor[6].y1 = -1;
+	neighbor[6].z1 = -1;
+	neighbor[6].w1 = -1;
+	neighbor[6].nb2 = 9;
+	neighbor[6].x2 = BN1[2];
+	neighbor[6].y2 = BN2[2];
+	neighbor[6].z2 = BN3[0];
+	neighbor[6].w2 = BN4[0];
+	neighbor[6].nb3 = 15;
+	neighbor[6].x3 = BN1[2];
+	neighbor[6].y3 = BN2[1];
+	neighbor[6].z3 = BN3[1];
+	neighbor[6].w3 = BN4[0];
+	neighbor[6].nb4 = 33;
+	neighbor[6].x4 = BN1[2];
+	neighbor[6].y4 = BN2[1];
+	neighbor[6].z4 = BN3[0];
+	neighbor[6].w4 = BN4[1];
+
+	neighbor[7].nb1 = 8;
+	neighbor[7].x1 = BN1[1];
+	neighbor[7].y1 = BN2[2];
+	neighbor[7].z1 = BN3[0];
+	neighbor[7].w1 = BN4[0];
+	neighbor[7].nb2 = -1;
+	neighbor[7].x2 = -1;
+	neighbor[7].y2 = -1;
+	neighbor[7].z2 = -1;
+	neighbor[7].w2 = -1;
+	neighbor[7].nb3 = 16;
+	neighbor[7].x3 = BN1[0];
+	neighbor[7].y3 = BN2[2];
+	neighbor[7].z3 = BN3[1];
+	neighbor[7].w3 = BN4[0];
+	neighbor[7].nb4 = 34;
+	neighbor[7].x4 = BN1[0];
+	neighbor[7].y4 = BN2[2];
+	neighbor[7].z4 = BN3[0];
+	neighbor[7].w4 = BN4[1];
+
+	neighbor[8].nb1 = 9;
+	neighbor[8].x1 = BN1[2];
+	neighbor[8].y1 = BN2[2];
+	neighbor[8].z1 = BN3[0];
+	neighbor[8].w1 = BN4[0];
+	neighbor[8].nb2 = -1;
+	neighbor[8].x2 = -1;
+	neighbor[8].y2 = -1;
+	neighbor[8].z2 = -1;
+	neighbor[8].w2 = -1;
+	neighbor[8].nb3 = 17;
+	neighbor[8].x3 = BN1[1];
+	neighbor[8].y3 = BN2[2];
+	neighbor[8].z3 = BN3[1];
+	neighbor[8].w3 = BN4[0];
+	neighbor[8].nb4 = 35;
+	neighbor[8].x4 = BN1[1];
+	neighbor[8].y4 = BN2[2];
+	neighbor[8].z4 = BN3[0];
+	neighbor[8].w4 = BN4[1];
+
+	neighbor[9].nb1 = -1;
+	neighbor[9].x1 = -1;
+	neighbor[9].y1 = -1;
+	neighbor[9].z1 = -1;
+	neighbor[9].w1 = -1;
+	neighbor[9].nb2 = -1;
+	neighbor[9].x2 = -1;
+	neighbor[9].y2 = -1;
+	neighbor[9].z2 = -1;
+	neighbor[9].w2 = -1;
+	neighbor[9].nb3 = 18;
+	neighbor[9].x3 = BN1[2];
+	neighbor[9].y3 = BN2[2];
+	neighbor[9].z3 = BN3[1];
+	neighbor[9].w3 = BN4[0];
+	neighbor[9].nb4 = 36;
+	neighbor[9].x4 = BN1[2];
+	neighbor[9].y4 = BN2[2];
+	neighbor[9].z4 = BN3[0];
+	neighbor[9].w4 = BN4[1];
+
+	neighbor[10].nb1 = 11;
+	neighbor[10].x1 = BN1[1];
+	neighbor[10].y1 = BN2[0];
+	neighbor[10].z1 = BN3[1];
+	neighbor[10].w1 = BN4[0];
+	neighbor[10].nb2 = 13;
+	neighbor[10].x2 = BN1[0];
+	neighbor[10].y2 = BN2[1];
+	neighbor[10].z2 = BN3[1];
+	neighbor[10].w2 = BN4[0];
+	neighbor[10].nb3 = 19;
+	neighbor[10].x3 = BN1[0];
+	neighbor[10].y3 = BN2[0];
+	neighbor[10].z3 = BN3[2];
+	neighbor[10].w3 = BN4[0];
+	neighbor[10].nb4 = 37;
+	neighbor[10].x4 = BN1[0];
+	neighbor[10].y4 = BN2[0];
+	neighbor[10].z4 = BN3[1];
+	neighbor[10].w4 = BN4[1];
+
+	neighbor[11].nb1 = 12;
+	neighbor[11].x1 = BN1[2];
+	neighbor[11].y1 = BN2[0];
+	neighbor[11].z1 = BN3[1];
+	neighbor[11].w1 = BN4[0];
+	neighbor[11].nb2 = 14;
+	neighbor[11].x2 = BN1[1];
+	neighbor[11].y2 = BN2[1];
+	neighbor[11].z2 = BN3[1];
+	neighbor[11].w2 = BN4[0];
+	neighbor[11].nb3 = 20;
+	neighbor[11].x3 = BN1[1];
+	neighbor[11].y3 = BN2[0];
+	neighbor[11].z3 = BN3[2];
+	neighbor[11].w3 = BN4[0];
+	neighbor[11].nb4 = 38;
+	neighbor[11].x4 = BN1[1];
+	neighbor[11].y4 = BN2[0];
+	neighbor[11].z4 = BN3[1];
+	neighbor[11].w4 = BN4[1];
+
+
+	neighbor[12].nb1 = -1;
+	neighbor[12].x1 = -1;
+	neighbor[12].y1 = -1;
+	neighbor[12].z1 = -1;
+	neighbor[12].w1 = -1;
+	neighbor[12].nb2 = 15;
+	neighbor[12].x2 = BN1[2];
+	neighbor[12].y2 = BN2[1];
+	neighbor[12].z2 = BN3[1];
+	neighbor[12].w2 = BN4[0];
+	neighbor[12].nb3 = 21;
+	neighbor[12].x3 = BN1[2];
+	neighbor[12].y3 = BN2[0];
+	neighbor[12].z3 = BN3[2];
+	neighbor[12].w3 = BN4[0];
+	neighbor[12].nb4 = 39;
+	neighbor[12].x4 = BN1[2];
+	neighbor[12].y4 = BN2[0];
+	neighbor[12].z4 = BN3[1];
+	neighbor[12].w4 = BN4[1];
+
+	neighbor[13].nb1 = 14;
+	neighbor[13].x1 = BN1[1];
+	neighbor[13].y1 = BN2[1];
+	neighbor[13].z1 = BN3[1];
+	neighbor[13].w1 = BN4[0];
+	neighbor[13].nb2 = 16;
+	neighbor[13].x2 = BN1[0];
+	neighbor[13].y2 = BN2[2];
+	neighbor[13].z2 = BN3[1];
+	neighbor[13].w2 = BN4[0];
+	neighbor[13].nb3 = 22;
+	neighbor[13].x3 = BN1[0];
+	neighbor[13].y3 = BN2[1];
+	neighbor[13].z3 = BN3[2];
+	neighbor[13].w3 = BN4[0];
+	neighbor[13].nb4 = 40;
+	neighbor[13].x4 = BN1[0];
+	neighbor[13].y4 = BN2[1];
+	neighbor[13].z4 = BN3[1];
+	neighbor[13].w4 = BN4[1];
+
+	neighbor[14].nb1 = 15;
+	neighbor[14].x1 = BN1[2];
+	neighbor[14].y1 = BN2[1];
+	neighbor[14].z1 = BN3[1];
+	neighbor[14].w1 = BN4[0];
+	neighbor[14].nb2 = 17;
+	neighbor[14].x2 = BN1[1];
+	neighbor[14].y2 = BN2[2];
+	neighbor[14].z2 = BN3[1];
+	neighbor[14].w2 = BN4[0];
+	neighbor[14].nb3 = 23;
+	neighbor[14].x3 = BN1[1];
+	neighbor[14].y3 = BN2[1];
+	neighbor[14].z3 = BN3[2];
+	neighbor[14].w3 = BN4[0];
+	neighbor[14].nb4 = 41;
+	neighbor[14].x4 = BN1[1];
+	neighbor[14].y4 = BN2[1];
+	neighbor[14].z4 = BN3[1];
+	neighbor[14].w4 = BN4[1];
+
+
+	neighbor[15].nb1 = -1;
+	neighbor[15].x1 = -1;
+	neighbor[15].y1 = -1;
+	neighbor[15].z1 = -1;
+	neighbor[15].w1 = -1;
+	neighbor[15].nb2 = 18;
+	neighbor[15].x2 = BN1[2];
+	neighbor[15].y2 = BN2[2];
+	neighbor[15].z2 = BN3[1];
+	neighbor[15].w2 = BN4[0];
+	neighbor[15].nb3 = 24;
+	neighbor[15].x3 = BN1[2];
+	neighbor[15].y3 = BN2[1];
+	neighbor[15].z3 = BN3[2];
+	neighbor[15].w3 = BN4[0];
+	neighbor[15].nb4 = 42;
+	neighbor[15].x4 = BN1[2];
+	neighbor[15].y4 = BN2[1];
+	neighbor[15].z4 = BN3[1];
+	neighbor[15].w4 = BN4[1];
+
+
+	neighbor[16].nb1 = 17;
+	neighbor[16].x1 = BN1[1];
+	neighbor[16].y1 = BN2[2];
+	neighbor[16].z1 = BN3[1];
+	neighbor[16].w1 = BN4[0];
+	neighbor[16].nb2 = -1;
+	neighbor[16].x2 = -1;
+	neighbor[16].y2 = -1;
+	neighbor[16].z2 = -1;
+	neighbor[16].w2 = -1;
+	neighbor[16].nb3 = 25;
+	neighbor[16].x3 = BN1[0];
+	neighbor[16].y3 = BN2[2];
+	neighbor[16].z3 = BN3[2];
+	neighbor[16].w3 = BN4[0];
+	neighbor[16].nb4 = 43;
+	neighbor[16].x4 = BN1[0];
+	neighbor[16].y4 = BN2[2];
+	neighbor[16].z4 = BN3[1];
+	neighbor[16].w4 = BN4[1];
+
+	neighbor[17].nb1 = 18;
+	neighbor[17].x1 = BN1[2];
+	neighbor[17].y1 = BN2[2];
+	neighbor[17].z1 = BN3[1];
+	neighbor[17].w1 = BN4[0];
+	neighbor[17].nb2 = -1;
+	neighbor[17].x2 = -1;
+	neighbor[17].y2 = -1;
+	neighbor[17].z2 = -1;
+	neighbor[17].w2 = -1;
+	neighbor[17].nb3 = 26;
+	neighbor[17].x3 = BN1[1];
+	neighbor[17].y3 = BN2[2];
+	neighbor[17].z3 = BN3[2];
+	neighbor[17].w3 = BN4[0];
+	neighbor[17].nb4 = 44;
+	neighbor[17].x4 = BN1[1];
+	neighbor[17].y4 = BN2[2];
+	neighbor[17].z4 = BN3[1];
+	neighbor[17].w4 = BN4[1];
+
+	neighbor[18].nb1 = -1;
+	neighbor[18].x1 = -1;
+	neighbor[18].y1 = -1;
+	neighbor[18].z1 = -1;
+	neighbor[18].w1 = -1;
+	neighbor[18].nb2 = -1;
+	neighbor[18].x2 = -1;
+	neighbor[18].y2 = -1;
+	neighbor[18].z2 = -1;
+	neighbor[18].w2 = -1;
+	neighbor[18].nb3 = 27;
+	neighbor[18].x3 = BN1[2];
+	neighbor[18].y3 = BN2[2];
+	neighbor[18].z3 = BN3[2];
+	neighbor[18].w3 = BN4[0];
+	neighbor[18].nb4 = 45;
+	neighbor[18].x4 = BN1[2];
+	neighbor[18].y4 = BN2[2];
+	neighbor[18].z4 = BN3[1];
+	neighbor[18].w4 = BN4[1];
+
+	neighbor[19].nb1 = 20;
+	neighbor[19].x1 = BN1[1];
+	neighbor[19].y1 = BN2[0];
+	neighbor[19].z1 = BN3[2];
+	neighbor[19].w1 = BN4[0];
+	neighbor[19].nb2 = 22;
+	neighbor[19].x2 = BN1[0];
+	neighbor[19].y2 = BN2[1];
+	neighbor[19].z2 = BN3[2];
+	neighbor[19].w2 = BN4[0];
+	neighbor[19].nb3 = -1;
+	neighbor[19].x3 = -1;
+	neighbor[19].y3 = -1;
+	neighbor[19].z3 = -1;
+	neighbor[19].w3 = -1;
+	neighbor[19].nb4 = 46;
+	neighbor[19].x4 = BN1[0];
+	neighbor[19].y4 = BN2[0];
+	neighbor[19].z4 = BN3[2];
+	neighbor[19].w4 = BN4[1];
+
+	neighbor[20].nb1 = 21;
+	neighbor[20].x1 = BN1[2];
+	neighbor[20].y1 = BN2[0];
+	neighbor[20].z1 = BN3[2];
+	neighbor[20].w1 = BN4[0];
+	neighbor[20].nb2 = 23;
+	neighbor[20].x2 = BN1[1];
+	neighbor[20].y2 = BN2[1];
+	neighbor[20].z2 = BN3[2];
+	neighbor[20].w2 = BN4[0];
+	neighbor[20].nb3 = -1;
+	neighbor[20].x3 = -1;
+	neighbor[20].y3 = -1;
+	neighbor[20].z3 = -1;
+	neighbor[20].w3 = -1;
+	neighbor[20].nb4 = 47;
+	neighbor[20].x4 = BN1[1];
+	neighbor[20].y4 = BN2[0];
+	neighbor[20].z4 = BN3[2];
+	neighbor[20].w4 = BN4[1];
+
+
+	neighbor[21].nb1 = -1;
+	neighbor[21].x1 = -1;
+	neighbor[21].y1 = -1;
+	neighbor[21].z1 = -1;
+	neighbor[21].w1 = -1;
+	neighbor[21].nb2 = 24;
+	neighbor[21].x2 = BN1[2];
+	neighbor[21].y2 = BN2[1];
+	neighbor[21].z2 = BN3[2];
+	neighbor[21].w2 = BN4[0];
+	neighbor[21].nb3 = -1;
+	neighbor[21].x3 = -1;
+	neighbor[21].y3 = -1;
+	neighbor[21].z3 = -1;
+	neighbor[21].w3 = -1;
+	neighbor[21].nb4 = 48;
+	neighbor[21].x4 = BN1[2];
+	neighbor[21].y4 = BN2[0];
+	neighbor[21].z4 = BN3[2];
+	neighbor[21].w4 = BN4[1];
+
+	neighbor[22].nb1 = 23;
+	neighbor[22].x1 = BN1[1];
+	neighbor[22].y1 = BN2[1];
+	neighbor[22].z1 = BN3[2];
+	neighbor[22].w1 = BN4[0];
+	neighbor[22].nb2 = 25;
+	neighbor[22].x2 = BN1[0];
+	neighbor[22].y2 = BN2[2];
+	neighbor[22].z2 = BN3[2];
+	neighbor[22].w2 = BN4[0];
+	neighbor[22].nb3 = -1;
+	neighbor[22].x3 = -1;
+	neighbor[22].y3 = -1;
+	neighbor[22].z3 = -1;
+	neighbor[22].w3 = -1;
+	neighbor[22].nb4 = 49;
+	neighbor[22].x4 = BN1[0];
+	neighbor[22].y4 = BN2[1];
+	neighbor[22].z4 = BN3[2];
+	neighbor[22].w4 = BN4[1];
+
+	neighbor[23].nb1 = 24;
+	neighbor[23].x1 = BN1[2];
+	neighbor[23].y1 = BN2[1];
+	neighbor[23].z1 = BN3[2];
+	neighbor[23].w1 = BN4[0];
+	neighbor[23].nb2 = 26;
+	neighbor[23].x2 = BN1[1];
+	neighbor[23].y2 = BN2[2];
+	neighbor[23].z2 = BN3[2];
+	neighbor[23].w2 = BN4[0];
+	neighbor[23].nb3 = -1;
+	neighbor[23].x3 = -1;
+	neighbor[23].y3 = -1;
+	neighbor[23].z3 = -1;
+	neighbor[23].w3 = -1;
+	neighbor[23].nb4 = 50;
+	neighbor[23].x4 = BN1[1];
+	neighbor[23].y4 = BN2[1];
+	neighbor[23].z4 = BN3[2];
+	neighbor[23].w4 = BN4[1];
+
+	neighbor[24].nb1 = -1;
+	neighbor[24].x1 = -1;
+	neighbor[24].y1 = -1;
+	neighbor[24].z1 = -1;
+	neighbor[24].w1 = -1;
+	neighbor[24].nb2 = 27;
+	neighbor[24].x2 = BN1[2];
+	neighbor[24].y2 = BN2[2];
+	neighbor[24].z2 = BN3[2];
+	neighbor[24].w2 = BN4[0];
+	neighbor[24].nb3 = -1;
+	neighbor[24].x3 = -1;
+	neighbor[24].y3 = -1;
+	neighbor[24].z3 = -1;
+	neighbor[24].w3 = -1;
+	neighbor[24].nb4 = 51;
+	neighbor[24].x4 = BN1[2];
+	neighbor[24].y4 = BN2[1];
+	neighbor[24].z4 = BN3[2];
+	neighbor[24].w4 = BN4[1];
+
+	neighbor[25].nb1 = 26;
+	neighbor[25].x1 = BN1[1];
+	neighbor[25].y1 = BN2[2];
+	neighbor[25].z1 = BN3[2];
+	neighbor[25].w1 = BN4[0];
+	neighbor[25].nb2 = -1;
+	neighbor[25].x2 = -1;
+	neighbor[25].y2 = -1;
+	neighbor[25].z2 = -1;
+	neighbor[25].w2 = -1;
+	neighbor[25].nb3 = -1;
+	neighbor[25].x3 = -1;
+	neighbor[25].y3 = -1;
+	neighbor[25].z3 = -1;
+	neighbor[25].w3 = -1;
+	neighbor[25].nb4 = 52;
+	neighbor[25].x4 = BN1[0];
+	neighbor[25].y4 = BN2[2];
+	neighbor[25].z4 = BN3[2];
+	neighbor[25].w4 = BN4[1];
+
+	neighbor[26].nb1 = 27;
+	neighbor[26].x1 = BN1[2];
+	neighbor[26].y1 = BN2[2];
+	neighbor[26].z1 = BN3[2];
+	neighbor[26].w1 = BN4[0];
+	neighbor[26].nb2 = -1;
+	neighbor[26].x2 = -1;
+	neighbor[26].y2 = -1;
+	neighbor[26].z2 = -1;
+	neighbor[26].w2 = -1;
+	neighbor[26].nb3 = -1;
+	neighbor[26].x3 = -1;
+	neighbor[26].y3 = -1;
+	neighbor[26].z3 = -1;
+	neighbor[26].w3 = -1;
+	neighbor[26].nb4 = 53;
+	neighbor[26].x4 = BN1[1];
+	neighbor[26].y4 = BN2[2];
+	neighbor[26].z4 = BN3[2];
+	neighbor[26].w4 = BN4[1];
+
+	neighbor[27].nb1 = -1;
+	neighbor[27].x1 = -1;
+	neighbor[27].y1 = -1;
+	neighbor[27].z1 = -1;
+	neighbor[27].w1 = -1;
+	neighbor[27].nb2 = -1;
+	neighbor[27].x2 = -1;
+	neighbor[27].y2 = -1;
+	neighbor[27].z2 = -1;
+	neighbor[27].w2 = -1;
+	neighbor[27].nb3 = -1;
+	neighbor[27].x3 = -1;
+	neighbor[27].y3 = -1;
+	neighbor[27].z3 = -1;
+	neighbor[27].w3 = -1;
+	neighbor[27].nb4 = 54;
+	neighbor[27].x4 = BN1[2];
+	neighbor[27].y4 = BN2[2];
+	neighbor[27].z4 = BN3[2];
+	neighbor[27].w4 = BN4[1];
+
+	neighbor[28].nb1 = 29;
+	neighbor[28].x1 = BN1[1];
+	neighbor[28].y1 = BN2[0];
+	neighbor[28].z1 = BN3[0];
+	neighbor[28].w1 = BN4[1];
+	neighbor[28].nb2 = 31;
+	neighbor[28].x2 = BN1[0];
+	neighbor[28].y2 = BN2[1];
+	neighbor[28].z2 = BN3[0];
+	neighbor[28].w2 = BN4[1];
+	neighbor[28].nb3 = 37;
+	neighbor[28].x3 = BN1[0];
+	neighbor[28].y3 = BN2[0];
+	neighbor[28].z3 = BN3[1];
+	neighbor[28].w3 = BN4[1];
+	neighbor[28].nb4 = 55;
+	neighbor[28].x4 = BN1[0];
+	neighbor[28].y4 = BN2[0];
+	neighbor[28].z4 = BN3[0];
+	neighbor[28].w4 = BN4[2];
+
+	neighbor[29].nb1 = 30;
+	neighbor[29].x1 = BN1[2];
+	neighbor[29].y1 = BN2[0];
+	neighbor[29].z1 = BN3[0];
+	neighbor[29].w1 = BN4[1];
+	neighbor[29].nb2 = 32;
+	neighbor[29].x2 = BN1[1];
+	neighbor[29].y2 = BN2[1];
+	neighbor[29].z2 = BN3[0];
+	neighbor[29].w2 = BN4[1];
+	neighbor[29].nb3 = 38;
+	neighbor[29].x3 = BN1[1];
+	neighbor[29].y3 = BN2[0];
+	neighbor[29].z3 = BN3[1];
+	neighbor[29].w3 = BN4[1];
+	neighbor[29].nb4 = 56;
+	neighbor[29].x4 = BN1[1];
+	neighbor[29].y4 = BN2[0];
+	neighbor[29].z4 = BN3[0];
+	neighbor[29].w4 = BN4[2];
+
+	neighbor[30].nb1 = -1;
+	neighbor[30].x1 = -1;
+	neighbor[30].y1 = -1;
+	neighbor[30].z1 = -1;
+	neighbor[30].w1 = -1;
+	neighbor[30].nb2 = 33;
+	neighbor[30].x2 = BN1[2];
+	neighbor[30].y2 = BN2[1];
+	neighbor[30].z2 = BN3[0];
+	neighbor[30].w2 = BN4[1];
+	neighbor[30].nb3 = 39;
+	neighbor[30].x3 = BN1[2];
+	neighbor[30].y3 = BN2[0];
+	neighbor[30].z3 = BN3[1];
+	neighbor[30].w3 = BN4[1];
+	neighbor[30].nb4 = 57;
+	neighbor[30].x4 = BN1[2];
+	neighbor[30].y4 = BN2[0];
+	neighbor[30].z4 = BN3[0];
+	neighbor[30].w4 = BN4[2];
+
+	neighbor[31].nb1 = 32;
+	neighbor[31].x1 = BN1[1];
+	neighbor[31].y1 = BN2[1];
+	neighbor[31].z1 = BN3[0];
+	neighbor[31].w1 = BN4[1];
+	neighbor[31].nb2 = 34;
+	neighbor[31].x2 = BN1[0];
+	neighbor[31].y2 = BN2[2];
+	neighbor[31].z2 = BN3[0];
+	neighbor[31].w2 = BN4[1];
+	neighbor[31].nb3 = 40;
+	neighbor[31].x3 = BN1[0];
+	neighbor[31].y3 = BN2[1];
+	neighbor[31].z3 = BN3[1];
+	neighbor[31].w3 = BN4[1];
+	neighbor[31].nb4 = 58;
+	neighbor[31].x4 = BN1[0];
+	neighbor[31].y4 = BN2[1];
+	neighbor[31].z4 = BN3[0];
+	neighbor[31].w4 = BN4[2];
+
+
+	neighbor[32].nb1 = 33;
+	neighbor[32].x1 = BN1[2];
+	neighbor[32].y1 = BN2[1];
+	neighbor[32].z1 = BN3[0];
+	neighbor[32].w1 = BN4[1];
+	neighbor[32].nb2 = 35;
+	neighbor[32].x2 = BN1[1];
+	neighbor[32].y2 = BN2[2];
+	neighbor[32].z2 = BN3[0];
+	neighbor[32].w2 = BN4[1];
+	neighbor[32].nb3 = 41;
+	neighbor[32].x3 = BN1[1];
+	neighbor[32].y3 = BN2[1];
+	neighbor[32].z3 = BN3[1];
+	neighbor[32].w3 = BN4[1];
+	neighbor[32].nb4 = 59;
+	neighbor[32].x4 = BN1[1];
+	neighbor[32].y4 = BN2[1];
+	neighbor[32].z4 = BN3[0];
+	neighbor[32].w4 = BN4[2];
+
+	neighbor[33].nb1 = -1;
+	neighbor[33].x1 = -1;
+	neighbor[33].y1 = -1;
+	neighbor[33].z1 = -1;
+	neighbor[33].w1 = -1;
+	neighbor[33].nb2 = 36;
+	neighbor[33].x2 = BN1[2];
+	neighbor[33].y2 = BN2[2];
+	neighbor[33].z2 = BN3[0];
+	neighbor[33].w2 = BN4[1];
+	neighbor[33].nb3 = 42;
+	neighbor[33].x3 = BN1[2];
+	neighbor[33].y3 = BN2[1];
+	neighbor[33].z3 = BN3[1];
+	neighbor[33].w3 = BN4[1];
+	neighbor[33].nb4 = 60;
+	neighbor[33].x4 = BN1[2];
+	neighbor[33].y4 = BN2[1];
+	neighbor[33].z4 = BN3[0];
+	neighbor[33].w4 = BN4[2];
+
+	neighbor[34].nb1 = 35;
+	neighbor[34].x1 = BN1[1];
+	neighbor[34].y1 = BN2[2];
+	neighbor[34].z1 = BN3[0];
+	neighbor[34].w1 = BN4[1];
+	neighbor[34].nb2 = -1;
+	neighbor[34].x2 = -1;
+	neighbor[34].y2 = -1;
+	neighbor[34].z2 = -1;
+	neighbor[34].w2 = -1;
+	neighbor[34].nb3 = 43;
+	neighbor[34].x3 = BN1[0];
+	neighbor[34].y3 = BN2[2];
+	neighbor[34].z3 = BN3[1];
+	neighbor[34].w3 = BN4[1];
+	neighbor[34].nb4 = 61;
+	neighbor[34].x4 = BN1[0];
+	neighbor[34].y4 = BN2[2];
+	neighbor[34].z4 = BN3[0];
+	neighbor[34].w4 = BN4[2];
+
+	neighbor[35].nb1 = 36;
+	neighbor[35].x1 = BN1[2];
+	neighbor[35].y1 = BN2[2];
+	neighbor[35].z1 = BN3[0];
+	neighbor[35].w1 = BN4[1];
+	neighbor[35].nb2 = -1;
+	neighbor[35].x2 = -1;
+	neighbor[35].y2 = -1;
+	neighbor[35].z2 = -1;
+	neighbor[35].w2 = -1;
+	neighbor[35].nb3 = 44;
+	neighbor[35].x3 = BN1[1];
+	neighbor[35].y3 = BN2[2];
+	neighbor[35].z3 = BN3[1];
+	neighbor[35].w3 = BN4[1];
+	neighbor[35].nb4 = 62;
+	neighbor[35].x4 = BN1[1];
+	neighbor[35].y4 = BN2[2];
+	neighbor[35].z4 = BN3[0];
+	neighbor[35].w4 = BN4[2];
+
+
+	neighbor[36].nb1 = -1;
+	neighbor[36].x1 = -1;
+	neighbor[36].y1 = -1;
+	neighbor[36].z1 = -1;
+	neighbor[36].w1 = -1;
+	neighbor[36].nb2 = -1;
+	neighbor[36].x2 = -1;
+	neighbor[36].y2 = -1;
+	neighbor[36].z2 = -1;
+	neighbor[36].w2 = -1;
+	neighbor[36].nb3 = 45;
+	neighbor[36].x3 = BN1[2];
+	neighbor[36].y3 = BN2[2];
+	neighbor[36].z3 = BN3[1];
+	neighbor[36].w3 = BN4[1];
+	neighbor[36].nb4 = 63;
+	neighbor[36].x4 = BN1[2];
+	neighbor[36].y4 = BN2[2];
+	neighbor[36].z4 = BN3[0];
+	neighbor[36].w4 = BN4[2];
+
+	neighbor[37].nb1 = 38;
+	neighbor[37].x1 = BN1[1];
+	neighbor[37].y1 = BN2[0];
+	neighbor[37].z1 = BN3[1];
+	neighbor[37].w1 = BN4[1];
+	neighbor[37].nb2 = 40;
+	neighbor[37].x2 = BN1[0];
+	neighbor[37].y2 = BN2[1];
+	neighbor[37].z2 = BN3[1];
+	neighbor[37].w2 = BN4[1];
+	neighbor[37].nb3 = 46;
+	neighbor[37].x3 = BN1[0];
+	neighbor[37].y3 = BN2[0];
+	neighbor[37].z3 = BN3[2];
+	neighbor[37].w3 = BN4[1];
+	neighbor[37].nb4 = 64;
+	neighbor[37].x4 = BN1[0];
+	neighbor[37].y4 = BN2[0];
+	neighbor[37].z4 = BN3[1];
+	neighbor[37].w4 = BN4[2];
+
+	neighbor[38].nb1 = 39;
+	neighbor[38].x1 = BN1[2];
+	neighbor[38].y1 = BN2[0];
+	neighbor[38].z1 = BN3[1];
+	neighbor[38].w1 = BN4[1];
+	neighbor[38].nb2 = 41;
+	neighbor[38].x2 = BN1[1];
+	neighbor[38].y2 = BN2[1];
+	neighbor[38].z2 = BN3[1];
+	neighbor[38].w2 = BN4[1];
+	neighbor[38].nb3 = 47;
+	neighbor[38].x3 = BN1[1];
+	neighbor[38].y3 = BN2[0];
+	neighbor[38].z3 = BN3[2];
+	neighbor[38].w3 = BN4[1];
+	neighbor[38].nb4 = 65;
+	neighbor[38].x4 = BN1[1];
+	neighbor[38].y4 = BN2[0];
+	neighbor[38].z4 = BN3[1];
+	neighbor[38].w4 = BN4[2];
+
+	neighbor[39].nb1 = -1;
+	neighbor[39].x1 = -1;
+	neighbor[39].y1 = -1;
+	neighbor[39].z1 = -1;
+	neighbor[39].w1 = -1;
+	neighbor[39].nb2 = 42;
+	neighbor[39].x2 = BN1[2];
+	neighbor[39].y2 = BN2[1];
+	neighbor[39].z2 = BN3[1];
+	neighbor[39].w2 = BN4[1];
+	neighbor[39].nb3 = 48;
+	neighbor[39].x3 = BN1[2];
+	neighbor[39].y3 = BN2[0];
+	neighbor[39].z3 = BN3[2];
+	neighbor[39].w3 = BN4[1];
+	neighbor[39].nb4 = 66;
+	neighbor[39].x4 = BN1[2];
+	neighbor[39].y4 = BN2[0];
+	neighbor[39].z4 = BN3[1];
+	neighbor[39].w4 = BN4[2];
+
+	neighbor[40].nb1 = 41;
+	neighbor[40].x1 = BN1[1];
+	neighbor[40].y1 = BN2[1];
+	neighbor[40].z1 = BN3[1];
+	neighbor[40].w1 = BN4[1];
+	neighbor[40].nb2 = 43;
+	neighbor[40].x2 = BN1[0];
+	neighbor[40].y2 = BN2[2];
+	neighbor[40].z2 = BN3[1];
+	neighbor[40].w2 = BN4[1];
+	neighbor[40].nb3 = 49;
+	neighbor[40].x3 = BN1[0];
+	neighbor[40].y3 = BN2[1];
+	neighbor[40].z3 = BN3[2];
+	neighbor[40].w3 = BN4[1];
+	neighbor[40].nb4 = 67;
+	neighbor[40].x4 = BN1[0];
+	neighbor[40].y4 = BN2[1];
+	neighbor[40].z4 = BN3[1];
+	neighbor[40].w4 = BN4[2];
+
+	neighbor[41].nb1 = 42;
+	neighbor[41].x1 = BN1[2];
+	neighbor[41].y1 = BN2[1];
+	neighbor[41].z1 = BN3[1];
+	neighbor[41].w1 = BN4[1];
+	neighbor[41].nb2 = 44;
+	neighbor[41].x2 = BN1[1];
+	neighbor[41].y2 = BN2[2];
+	neighbor[41].z2 = BN3[1];
+	neighbor[41].w2 = BN4[1];
+	neighbor[41].nb3 = 50;
+	neighbor[41].x3 = BN1[1];
+	neighbor[41].y3 = BN2[1];
+	neighbor[41].z3 = BN3[2];
+	neighbor[41].w3 = BN4[1];
+	neighbor[41].nb4 = 68;
+	neighbor[41].x4 = BN1[1];
+	neighbor[41].y4 = BN2[1];
+	neighbor[41].z4 = BN3[1];
+	neighbor[41].w4 = BN4[2];
+
+	neighbor[42].nb1 = -1;
+	neighbor[42].x1 = -1;
+	neighbor[42].y1 = -1;
+	neighbor[42].z1 = -1;
+	neighbor[42].w1 = -1;
+	neighbor[42].nb2 = 45;
+	neighbor[42].x2 = BN1[2];
+	neighbor[42].y2 = BN2[2];
+	neighbor[42].z2 = BN3[1];
+	neighbor[42].w2 = BN4[1];
+	neighbor[42].nb3 = 51;
+	neighbor[42].x3 = BN1[2];
+	neighbor[42].y3 = BN2[1];
+	neighbor[42].z3 = BN3[2];
+	neighbor[42].w3 = BN4[1];
+	neighbor[42].nb4 = 69;
+	neighbor[42].x4 = BN1[2];
+	neighbor[42].y4 = BN2[1];
+	neighbor[42].z4 = BN3[1];
+	neighbor[42].w4 = BN4[2];
+
+	neighbor[43].nb1 = 44;
+	neighbor[43].x1 = BN1[1];
+	neighbor[43].y1 = BN2[2];
+	neighbor[43].z1 = BN3[1];
+	neighbor[43].w1 = BN4[1];
+	neighbor[43].nb2 = -1;
+	neighbor[43].x2 = -1;
+	neighbor[43].y2 = -1;
+	neighbor[43].z2 = -1;
+	neighbor[43].w2 = -1;
+	neighbor[43].nb3 = 52;
+	neighbor[43].x3 = BN1[0];
+	neighbor[43].y3 = BN2[2];
+	neighbor[43].z3 = BN3[2];
+	neighbor[43].w3 = BN4[1];
+	neighbor[43].nb4 = 70;
+	neighbor[43].x4 = BN1[0];
+	neighbor[43].y4 = BN2[2];
+	neighbor[43].z4 = BN3[1];
+	neighbor[43].w4 = BN4[2];
+
+	neighbor[44].nb1 = 45;
+	neighbor[44].x1 = BN1[2];
+	neighbor[44].y1 = BN2[2];
+	neighbor[44].z1 = BN3[1];
+	neighbor[44].w1 = BN4[1];
+	neighbor[44].nb2 = -1;
+	neighbor[44].x2 = -1;
+	neighbor[44].y2 = -1;
+	neighbor[44].z2 = -1;
+	neighbor[44].w2 = -1;
+	neighbor[44].nb3 = 53;
+	neighbor[44].x3 = BN1[1];
+	neighbor[44].y3 = BN2[2];
+	neighbor[44].z3 = BN3[2];
+	neighbor[44].w3 = BN4[1];
+	neighbor[44].nb4 = 71;
+	neighbor[44].x4 = BN1[1];
+	neighbor[44].y4 = BN2[2];
+	neighbor[44].z4 = BN3[1];
+	neighbor[44].w4 = BN4[2];
+
+	neighbor[45].nb1 = -1;
+	neighbor[45].x1 = -1;
+	neighbor[45].y1 = -1;
+	neighbor[45].z1 = -1;
+	neighbor[45].w1 = -1;
+	neighbor[45].nb2 = -1;
+	neighbor[45].x2 = -1;
+	neighbor[45].y2 = -1;
+	neighbor[45].z2 = -1;
+	neighbor[45].w2 = -1;
+	neighbor[45].nb3 = 54;
+	neighbor[45].x3 = BN1[2];
+	neighbor[45].y3 = BN2[2];
+	neighbor[45].z3 = BN3[2];
+	neighbor[45].w3 = BN4[1];
+	neighbor[45].nb4 = 72;
+	neighbor[45].x4 = BN1[2];
+	neighbor[45].y4 = BN2[2];
+	neighbor[45].z4 = BN3[1];
+	neighbor[45].w4 = BN4[2];
+
+	neighbor[46].nb1 = 47;
+	neighbor[46].x1 = BN1[1];
+	neighbor[46].y1 = BN2[0];
+	neighbor[46].z1 = BN3[2];
+	neighbor[46].w1 = BN4[1];
+	neighbor[46].nb2 = 49;
+	neighbor[46].x2 = BN1[0];
+	neighbor[46].y2 = BN2[1];
+	neighbor[46].z2 = BN3[2];
+	neighbor[46].w2 = BN4[1];
+	neighbor[46].nb3 = -1;
+	neighbor[46].x3 = -1;
+	neighbor[46].y3 = -1;
+	neighbor[46].z3 = -1;
+	neighbor[46].w3 = -1;
+	neighbor[46].nb4 = 73;
+	neighbor[46].x4 = BN1[0];
+	neighbor[46].y4 = BN2[0];
+	neighbor[46].z4 = BN3[2];
+	neighbor[46].w4 = BN4[2];
+
+	neighbor[47].nb1 = 48;
+	neighbor[47].x1 = BN1[2];
+	neighbor[47].y1 = BN2[0];
+	neighbor[47].z1 = BN3[2];
+	neighbor[47].w1 = BN4[1];
+	neighbor[47].nb2 = 50;
+	neighbor[47].x2 = BN1[1];
+	neighbor[47].y2 = BN2[1];
+	neighbor[47].z2 = BN3[2];
+	neighbor[47].w2 = BN4[1];
+	neighbor[47].nb3 = -1;
+	neighbor[47].x3 = -1;
+	neighbor[47].y3 = -1;
+	neighbor[47].z3 = -1;
+	neighbor[47].w3 = -1;
+	neighbor[47].nb4 = 74;
+	neighbor[47].x4 = BN1[1];
+	neighbor[47].y4 = BN2[0];
+	neighbor[47].z4 = BN3[2];
+	neighbor[47].w4 = BN4[2];
+
+
+	neighbor[48].nb1 = -1;
+	neighbor[48].x1 = -1;
+	neighbor[48].y1 = -1;
+	neighbor[48].z1 = -1;
+	neighbor[48].w1 = -1;
+	neighbor[48].nb2 = 51;
+	neighbor[48].x2 = BN1[2];
+	neighbor[48].y2 = BN2[1];
+	neighbor[48].z2 = BN3[2];
+	neighbor[48].w2 = BN4[1];
+	neighbor[48].nb3 = -1;
+	neighbor[48].x3 = -1;
+	neighbor[48].y3 = -1;
+	neighbor[48].z3 = -1;
+	neighbor[48].w3 = -1;
+	neighbor[48].nb4 = 75;
+	neighbor[48].x4 = BN1[2];
+	neighbor[48].y4 = BN2[0];
+	neighbor[48].z4 = BN3[2];
+	neighbor[48].w4 = BN4[2];
+
+	neighbor[49].nb1 = 50;
+	neighbor[49].x1 = BN1[1];
+	neighbor[49].y1 = BN2[1];
+	neighbor[49].z1 = BN3[2];
+	neighbor[49].w1 = BN4[1];
+	neighbor[49].nb2 = 52;
+	neighbor[49].x2 = BN1[0];
+	neighbor[49].y2 = BN2[2];
+	neighbor[49].z2 = BN3[2];
+	neighbor[49].w2 = BN4[1];
+	neighbor[49].nb3 = -1;
+	neighbor[49].x3 = -1;
+	neighbor[49].y3 = -1;
+	neighbor[49].z3 = -1;
+	neighbor[49].w3 = -1;
+	neighbor[49].nb4 = 76;
+	neighbor[49].x4 = BN1[0];
+	neighbor[49].y4 = BN2[1];
+	neighbor[49].z4 = BN3[2];
+	neighbor[49].w4 = BN4[2];
+
+	neighbor[50].nb1 = 51;
+	neighbor[50].x1 = BN1[2];
+	neighbor[50].y1 = BN2[1];
+	neighbor[50].z1 = BN3[2];
+	neighbor[50].w1 = BN4[1];
+	neighbor[50].nb2 = 53;
+	neighbor[50].x2 = BN1[1];
+	neighbor[50].y2 = BN2[2];
+	neighbor[50].z2 = BN3[2];
+	neighbor[50].w2 = BN4[1];
+	neighbor[50].nb3 = -1;
+	neighbor[50].x3 = -1;
+	neighbor[50].y3 = -1;
+	neighbor[50].z3 = -1;
+	neighbor[50].w3 = -1;
+	neighbor[50].nb4 = 77;
+	neighbor[50].x4 = BN1[1];
+	neighbor[50].y4 = BN2[1];
+	neighbor[50].z4 = BN3[2];
+	neighbor[50].w4 = BN4[2];
+
+	neighbor[51].nb1 = -1;
+	neighbor[51].x1 = -1;
+	neighbor[51].y1 = -1;
+	neighbor[51].z1 = -1;
+	neighbor[51].w1 = -1;
+	neighbor[51].nb2 = 54;
+	neighbor[51].x2 = BN1[2];
+	neighbor[51].y2 = BN2[2];
+	neighbor[51].z2 = BN3[2];
+	neighbor[51].w2 = BN4[1];
+	neighbor[51].nb3 = -1;
+	neighbor[51].x3 = -1;
+	neighbor[51].y3 = -1;
+	neighbor[51].z3 = -1;
+	neighbor[51].w3 = -1;
+	neighbor[51].nb4 = 78;
+	neighbor[51].x4 = BN1[2];
+	neighbor[51].y4 = BN2[1];
+	neighbor[51].z4 = BN3[2];
+	neighbor[51].w4 = BN4[2];
+
+
+	neighbor[52].nb1 = 53;
+	neighbor[52].x1 = BN1[1];
+	neighbor[52].y1 = BN2[2];
+	neighbor[52].z1 = BN3[2];
+	neighbor[52].w1 = BN4[1];
+	neighbor[52].nb2 = -1;
+	neighbor[52].x2 = -1;
+	neighbor[52].y2 = -1;
+	neighbor[52].z2 = -1;
+	neighbor[52].w2 = -1;
+	neighbor[52].nb3 = -1;
+	neighbor[52].x3 = -1;
+	neighbor[52].y3 = -1;
+	neighbor[52].z3 = -1;
+	neighbor[52].w3 = -1;
+	neighbor[52].nb4 = 79;
+	neighbor[52].x4 = BN1[0];
+	neighbor[52].y4 = BN2[2];
+	neighbor[52].z4 = BN3[2];
+	neighbor[52].w4 = BN4[2];
+
+	neighbor[53].nb1 = 54;
+	neighbor[53].x1 = BN1[2];
+	neighbor[53].y1 = BN2[2];
+	neighbor[53].z1 = BN3[2];
+	neighbor[53].w1 = BN4[1];
+	neighbor[53].nb2 = -1;
+	neighbor[53].x2 = -1;
+	neighbor[53].y2 = -1;
+	neighbor[53].z2 = -1;
+	neighbor[53].w2 = -1;
+	neighbor[53].nb3 = -1;
+	neighbor[53].x3 = -1;
+	neighbor[53].y3 = -1;
+	neighbor[53].z3 = -1;
+	neighbor[53].w3 = -1;
+	neighbor[53].nb4 = 80;
+	neighbor[53].x4 = BN1[1];
+	neighbor[53].y4 = BN2[2];
+	neighbor[53].z4 = BN3[2];
+	neighbor[53].w4 = BN4[2];
+
+	neighbor[54].nb1 = -1;
+	neighbor[54].x1 = -1;
+	neighbor[54].y1 = -1;
+	neighbor[54].z1 = -1;
+	neighbor[54].w1 = -1;
+	neighbor[54].nb2 = -1;
+	neighbor[54].x2 = -1;
+	neighbor[54].y2 = -1;
+	neighbor[54].z2 = -1;
+	neighbor[54].w2 = -1;
+	neighbor[54].nb3 = -1;
+	neighbor[54].x3 = -1;
+	neighbor[54].y3 = -1;
+	neighbor[54].z3 = -1;
+	neighbor[54].w3 = -1;
+	neighbor[54].nb4 = 81;
+	neighbor[54].x4 = BN1[2];
+	neighbor[54].y4 = BN2[2];
+	neighbor[54].z4 = BN3[2];
+	neighbor[54].w4 = BN4[2];
+
+	neighbor[55].nb1 = 56;
+	neighbor[55].x1 = BN1[1];
+	neighbor[55].y1 = BN2[0];
+	neighbor[55].z1 = BN3[0];
+	neighbor[55].w1 = BN4[2];
+	neighbor[55].nb2 = 58;
+	neighbor[55].x2 = BN1[0];
+	neighbor[55].y2 = BN2[1];
+	neighbor[55].z2 = BN3[0];
+	neighbor[55].w2 = BN4[2];
+	neighbor[55].nb3 = 64;
+	neighbor[55].x3 = BN1[0];
+	neighbor[55].y3 = BN2[0];
+	neighbor[55].z3 = BN3[1];
+	neighbor[55].w3 = BN4[2];
+	neighbor[55].nb4 = -1;
+	neighbor[55].x4 = -1;
+	neighbor[55].y4 = -1;
+	neighbor[55].z4 = -1;
+	neighbor[55].w4 = -1;
+
+	neighbor[56].nb1 = 57;
+	neighbor[56].x1 = BN1[2];
+	neighbor[56].y1 = BN2[0];
+	neighbor[56].z1 = BN3[0];
+	neighbor[56].w1 = BN4[2];
+	neighbor[56].nb2 = 59;
+	neighbor[56].x2 = BN1[1];
+	neighbor[56].y2 = BN2[1];
+	neighbor[56].z2 = BN3[0];
+	neighbor[56].w2 = BN4[2];
+	neighbor[56].nb3 = 65;
+	neighbor[56].x3 = BN1[1];
+	neighbor[56].y3 = BN2[0];
+	neighbor[56].z3 = BN3[1];
+	neighbor[56].w3 = BN4[2];
+	neighbor[56].nb4 = -1;
+	neighbor[56].x4 = -1;
+	neighbor[56].y4 = -1;
+	neighbor[56].z4 = -1;
+	neighbor[56].w4 = -1;
+
+	neighbor[57].nb1 = -1;
+	neighbor[57].x1 = -1;
+	neighbor[57].y1 = -1;
+	neighbor[57].z1 = -1;
+	neighbor[57].w1 = -1;
+	neighbor[57].nb2 = 60;
+	neighbor[57].x2 = BN1[2];
+	neighbor[57].y2 = BN2[1];
+	neighbor[57].z2 = BN3[0];
+	neighbor[57].w2 = BN4[2];
+	neighbor[57].nb3 = 66;
+	neighbor[57].x3 = BN1[2];
+	neighbor[57].y3 = BN2[0];
+	neighbor[57].z3 = BN3[1];
+	neighbor[57].w3 = BN4[2];
+	neighbor[57].nb4 = -1;
+	neighbor[57].x4 = -1;
+	neighbor[57].y4 = -1;
+	neighbor[57].z4 = -1;
+	neighbor[57].w4 = -1;
+
+	neighbor[58].nb1 = 59;
+	neighbor[58].x1 = BN1[1];
+	neighbor[58].y1 = BN2[1];
+	neighbor[58].z1 = BN3[0];
+	neighbor[58].w1 = BN4[2];
+	neighbor[58].nb2 = 61;
+	neighbor[58].x2 = BN1[0];
+	neighbor[58].y2 = BN2[2];
+	neighbor[58].z2 = BN3[0];
+	neighbor[58].w2 = BN4[2];
+	neighbor[58].nb3 = 67;
+	neighbor[58].x3 = BN1[0];
+	neighbor[58].y3 = BN2[1];
+	neighbor[58].z3 = BN3[1];
+	neighbor[58].w3 = BN4[2];
+	neighbor[58].nb4 = -1;
+	neighbor[58].x4 = -1;
+	neighbor[58].y4 = -1;
+	neighbor[58].z4 = -1;
+	neighbor[58].w4 = -1;
+
+	neighbor[59].nb1 = 60;
+	neighbor[59].x1 = BN1[2];
+	neighbor[59].y1 = BN2[1];
+	neighbor[59].z1 = BN3[0];
+	neighbor[59].w1 = BN4[2];
+	neighbor[59].nb2 = 62;
+	neighbor[59].x2 = BN1[1];
+	neighbor[59].y2 = BN2[2];
+	neighbor[59].z2 = BN3[0];
+	neighbor[59].w2 = BN4[2];
+	neighbor[59].nb3 = 68;
+	neighbor[59].x3 = BN1[1];
+	neighbor[59].y3 = BN2[1];
+	neighbor[59].z3 = BN3[1];
+	neighbor[59].w3 = BN4[2];
+	neighbor[59].nb4 = -1;
+	neighbor[59].x4 = -1;
+	neighbor[59].y4 = -1;
+	neighbor[59].z4 = -1;
+	neighbor[59].w4 = -1;
+
+	neighbor[60].nb1 = -1;
+	neighbor[60].x1 = -1;
+	neighbor[60].y1 = -1;
+	neighbor[60].z1 = -1;
+	neighbor[60].w1 = -1;
+	neighbor[60].nb2 = 63;
+	neighbor[60].x2 = BN1[2];
+	neighbor[60].y2 = BN2[2];
+	neighbor[60].z2 = BN3[0];
+	neighbor[60].w2 = BN4[2];
+	neighbor[60].nb3 = 69;
+	neighbor[60].x3 = BN1[2];
+	neighbor[60].y3 = BN2[1];
+	neighbor[60].z3 = BN3[1];
+	neighbor[60].w3 = BN4[2];
+	neighbor[60].nb4 = -1;
+	neighbor[60].x4 = -1;
+	neighbor[60].y4 = -1;
+	neighbor[60].z4 = -1;
+	neighbor[60].w4 = -1;
+
+	neighbor[61].nb1 = 62;
+	neighbor[61].x1 = BN1[1];
+	neighbor[61].y1 = BN2[2];
+	neighbor[61].z1 = BN3[0];
+	neighbor[61].w1 = BN4[2];
+	neighbor[61].nb2 = -1;
+	neighbor[61].x2 = -1;
+	neighbor[61].y2 = -1;
+	neighbor[61].z2 = -1;
+	neighbor[61].w2 = -1;
+	neighbor[61].nb3 = 70;
+	neighbor[61].x3 = BN1[0];
+	neighbor[61].y3 = BN2[2];
+	neighbor[61].z3 = BN3[1];
+	neighbor[61].w3 = BN4[2];
+	neighbor[61].nb4 = -1;
+	neighbor[61].x4 = -1;
+	neighbor[61].y4 = -1;
+	neighbor[61].z4 = -1;
+	neighbor[61].w4 = -1;
+
+	neighbor[62].nb1 = 63;
+	neighbor[62].x1 = BN1[2];
+	neighbor[62].y1 = BN2[2];
+	neighbor[62].z1 = BN3[0];
+	neighbor[62].w1 = BN4[2];
+	neighbor[62].nb2 = -1;
+	neighbor[62].x2 = -1;
+	neighbor[62].y2 = -1;
+	neighbor[62].z2 = -1;
+	neighbor[62].w2 = -1;
+	neighbor[62].nb3 = 71;
+	neighbor[62].x3 = BN1[1];
+	neighbor[62].y3 = BN2[2];
+	neighbor[62].z3 = BN3[1];
+	neighbor[62].w3 = BN4[2];
+	neighbor[62].nb4 = -1;
+	neighbor[62].x4 = -1;
+	neighbor[62].y4 = -1;
+	neighbor[62].z4 = -1;
+	neighbor[62].w4 = -1;
+
+	neighbor[63].nb1 = -1;
+	neighbor[63].x1 = -1;
+	neighbor[63].y1 = -1;
+	neighbor[63].z1 = -1;
+	neighbor[63].w1 = -1;
+	neighbor[63].nb2 = -1;
+	neighbor[63].x2 = -1;
+	neighbor[63].y2 = -1;
+	neighbor[63].z2 = -1;
+	neighbor[63].w2 = -1;
+	neighbor[63].nb3 = 72;
+	neighbor[63].x3 = BN1[2];
+	neighbor[63].y3 = BN2[2];
+	neighbor[63].z3 = BN3[1];
+	neighbor[63].w3 = BN4[2];
+	neighbor[63].nb4 = -1;
+	neighbor[63].x4 = -1;
+	neighbor[63].y4 = -1;
+	neighbor[63].z4 = -1;
+	neighbor[63].w4 = -1;
+
+
+	neighbor[64].nb1 = 65;
+	neighbor[64].x1 = BN1[1];
+	neighbor[64].y1 = BN2[0];
+	neighbor[64].z1 = BN3[1];
+	neighbor[64].w1 = BN4[2];
+	neighbor[64].nb2 = 67;
+	neighbor[64].x2 = BN1[0];
+	neighbor[64].y2 = BN2[1];
+	neighbor[64].z2 = BN3[1];
+	neighbor[64].w2 = BN4[2];
+	neighbor[64].nb3 = 73;
+	neighbor[64].x3 = BN1[0];
+	neighbor[64].y3 = BN2[0];
+	neighbor[64].z3 = BN3[2];
+	neighbor[64].w3 = BN4[2];
+	neighbor[64].nb4 = -1;
+	neighbor[64].x4 = -1;
+	neighbor[64].y4 = -1;
+	neighbor[64].z4 = -1;
+	neighbor[64].w4 = -1;
+
+	neighbor[65].nb1 = 66;
+	neighbor[65].x1 = BN1[2];
+	neighbor[65].y1 = BN2[0];
+	neighbor[65].z1 = BN3[1];
+	neighbor[65].w1 = BN4[2];
+	neighbor[65].nb2 = 68;
+	neighbor[65].x2 = BN1[1];
+	neighbor[65].y2 = BN2[1];
+	neighbor[65].z2 = BN3[1];
+	neighbor[65].w2 = BN4[2];
+	neighbor[65].nb3 = 74;
+	neighbor[65].x3 = BN1[1];
+	neighbor[65].y3 = BN2[0];
+	neighbor[65].z3 = BN3[2];
+	neighbor[65].w3 = BN4[2];
+	neighbor[65].nb4 = -1;
+	neighbor[65].x4 = -1;
+	neighbor[65].y4 = -1;
+	neighbor[65].z4 = -1;
+	neighbor[65].w4 = -1;
+
+	neighbor[66].nb1 = -1;
+	neighbor[66].x1 = -1;
+	neighbor[66].y1 = -1;
+	neighbor[66].z1 = -1;
+	neighbor[66].w1 = -1;
+	neighbor[66].nb2 = 69;
+	neighbor[66].x2 = BN1[2];
+	neighbor[66].y2 = BN2[1];
+	neighbor[66].z2 = BN3[1];
+	neighbor[66].w2 = BN4[2];
+	neighbor[66].nb3 = 75;
+	neighbor[66].x3 = BN1[2];
+	neighbor[66].y3 = BN2[0];
+	neighbor[66].z3 = BN3[2];
+	neighbor[66].w3 = BN4[2];
+	neighbor[66].nb4 = -1;
+	neighbor[66].x4 = -1;
+	neighbor[66].y4 = -1;
+	neighbor[66].z4 = -1;
+	neighbor[66].w4 = -1;
+
+	neighbor[67].nb1 = 68;
+	neighbor[67].x1 = BN1[1];
+	neighbor[67].y1 = BN2[1];
+	neighbor[67].z1 = BN3[1];
+	neighbor[67].w1 = BN4[2];
+	neighbor[67].nb2 = 70;
+	neighbor[67].x2 = BN1[0];
+	neighbor[67].y2 = BN2[2];
+	neighbor[67].z2 = BN3[1];
+	neighbor[67].w2 = BN4[2];
+	neighbor[67].nb3 = 76;
+	neighbor[67].x3 = BN1[0];
+	neighbor[67].y3 = BN2[1];
+	neighbor[67].z3 = BN3[2];
+	neighbor[67].w3 = BN4[2];
+	neighbor[67].nb4 = -1;
+	neighbor[67].x4 = -1;
+	neighbor[67].y4 = -1;
+	neighbor[67].z4 = -1;
+	neighbor[67].w4 = -1;
+
+	neighbor[68].nb1 = 69;
+	neighbor[68].x1 = BN1[2];
+	neighbor[68].y1 = BN2[1];
+	neighbor[68].z1 = BN3[1];
+	neighbor[68].w1 = BN4[2];
+	neighbor[68].nb2 = 71;
+	neighbor[68].x2 = BN1[1];
+	neighbor[68].y2 = BN2[2];
+	neighbor[68].z2 = BN3[1];
+	neighbor[68].w2 = BN4[2];
+	neighbor[68].nb3 = 77;
+	neighbor[68].x3 = BN1[1];
+	neighbor[68].y3 = BN2[1];
+	neighbor[68].z3 = BN3[2];
+	neighbor[68].w3 = BN4[2];
+	neighbor[68].nb4 = -1;
+	neighbor[68].x4 = -1;
+	neighbor[68].y4 = -1;
+	neighbor[68].z4 = -1;
+	neighbor[68].w4 = -1;
+
+	neighbor[69].nb1 = -1;
+	neighbor[69].x1 = -1;
+	neighbor[69].y1 = -1;
+	neighbor[69].z1 = -1;
+	neighbor[69].w1 = -1;
+	neighbor[69].nb2 = 72;
+	neighbor[69].x2 = BN1[2];
+	neighbor[69].y2 = BN2[2];
+	neighbor[69].z2 = BN3[1];
+	neighbor[69].w2 = BN4[2];
+	neighbor[69].nb3 = 78;
+	neighbor[69].x3 = BN1[2];
+	neighbor[69].y3 = BN2[1];
+	neighbor[69].z3 = BN3[2];
+	neighbor[69].w3 = BN4[2];
+	neighbor[69].nb4 = -1;
+	neighbor[69].x4 = -1;
+	neighbor[69].y4 = -1;
+	neighbor[69].z4 = -1;
+	neighbor[69].w4 = -1;
+
+	neighbor[70].nb1 = 71;
+	neighbor[70].x1 = BN1[1];
+	neighbor[70].y1 = BN2[2];
+	neighbor[70].z1 = BN3[1];
+	neighbor[70].w1 = BN4[2];
+	neighbor[70].nb2 = -1;
+	neighbor[70].x2 = -1;
+	neighbor[70].y2 = -1;
+	neighbor[70].z2 = -1;
+	neighbor[70].w2 = -1;
+	neighbor[70].nb3 = 79;
+	neighbor[70].x3 = BN1[0];
+	neighbor[70].y3 = BN2[2];
+	neighbor[70].z3 = BN3[2];
+	neighbor[70].w3 = BN4[2];
+	neighbor[70].nb4 = -1;
+	neighbor[70].x4 = -1;
+	neighbor[70].y4 = -1;
+	neighbor[70].z4 = -1;
+	neighbor[70].w4 = -1;
+
+	neighbor[71].nb1 = 72;
+	neighbor[71].x1 = BN1[2];
+	neighbor[71].y1 = BN2[2];
+	neighbor[71].z1 = BN3[1];
+	neighbor[71].w1 = BN4[2];
+	neighbor[71].nb2 = -1;
+	neighbor[71].x2 = -1;
+	neighbor[71].y2 = -1;
+	neighbor[71].z2 = -1;
+	neighbor[71].w2 = -1;
+	neighbor[71].nb3 = 80;
+	neighbor[71].x3 = BN1[1];
+	neighbor[71].y3 = BN2[2];
+	neighbor[71].z3 = BN3[2];
+	neighbor[71].w3 = BN4[2];
+	neighbor[71].nb4 = -1;
+	neighbor[71].x4 = -1;
+	neighbor[71].y4 = -1;
+	neighbor[71].z4 = -1;
+	neighbor[71].w4 = -1;
+
+	neighbor[72].nb1 = -1;
+	neighbor[72].x1 = -1;
+	neighbor[72].y1 = -1;
+	neighbor[72].z1 = -1;
+	neighbor[72].w1 = -1;
+	neighbor[72].nb2 = -1;
+	neighbor[72].x2 = -1;
+	neighbor[72].y2 = -1;
+	neighbor[72].z2 = -1;
+	neighbor[72].w2 = -1;
+	neighbor[72].nb3 = 81;
+	neighbor[72].x3 = BN1[2];
+	neighbor[72].y3 = BN2[2];
+	neighbor[72].z3 = BN3[2];
+	neighbor[72].w3 = BN4[2];
+	neighbor[72].nb4 = -1;
+	neighbor[72].x4 = -1;
+	neighbor[72].y4 = -1;
+	neighbor[72].z4 = -1;
+	neighbor[72].w4 = -1;
+
+	neighbor[73].nb1 = 74;
+	neighbor[73].x1 = BN1[1];
+	neighbor[73].y1 = BN2[0];
+	neighbor[73].z1 = BN3[2];
+	neighbor[73].w1 = BN4[2];
+	neighbor[73].nb2 = 76;
+	neighbor[73].x2 = BN1[0];
+	neighbor[73].y2 = BN2[1];
+	neighbor[73].z2 = BN3[2];
+	neighbor[73].w2 = BN4[2];
+	neighbor[73].nb3 = -1;
+	neighbor[73].x3 = -1;
+	neighbor[73].y3 = -1;
+	neighbor[73].z3 = -1;
+	neighbor[73].w3 = -1;
+	neighbor[73].nb4 = -1;
+	neighbor[73].x4 = -1;
+	neighbor[73].y4 = -1;
+	neighbor[73].z4 = -1;
+	neighbor[73].w4 = -1;
+
+	neighbor[74].nb1 = 75;
+	neighbor[74].x1 = BN1[2];
+	neighbor[74].y1 = BN2[0];
+	neighbor[74].z1 = BN3[2];
+	neighbor[74].w1 = BN4[2];
+	neighbor[74].nb2 = 77;
+	neighbor[74].x2 = BN1[1];
+	neighbor[74].y2 = BN2[1];
+	neighbor[74].z2 = BN3[2];
+	neighbor[74].w2 = BN4[2];
+	neighbor[74].nb3 = -1;
+	neighbor[74].x3 = -1;
+	neighbor[74].y3 = -1;
+	neighbor[74].z3 = -1;
+	neighbor[74].w3 = -1;
+	neighbor[74].nb4 = -1;
+	neighbor[74].x4 = -1;
+	neighbor[74].y4 = -1;
+	neighbor[74].z4 = -1;
+	neighbor[74].w4 = -1;
+
+	neighbor[75].nb1 = -1;
+	neighbor[75].x1 = -1;
+	neighbor[75].y1 = -1;
+	neighbor[75].z1 = -1;
+	neighbor[75].w1 = -1;
+	neighbor[75].nb2 = 78;
+	neighbor[75].x2 = BN1[2];
+	neighbor[75].y2 = BN2[1];
+	neighbor[75].z2 = BN3[2];
+	neighbor[75].w2 = BN4[2];
+	neighbor[75].nb3 = -1;
+	neighbor[75].x3 = -1;
+	neighbor[75].y3 = -1;
+	neighbor[75].z3 = -1;
+	neighbor[75].w3 = -1;
+	neighbor[75].nb4 = -1;
+	neighbor[75].x4 = -1;
+	neighbor[75].y4 = -1;
+	neighbor[75].z4 = -1;
+	neighbor[75].w4 = -1;
+
+	neighbor[76].nb1 = 77;
+	neighbor[76].x1 = BN1[1];
+	neighbor[76].y1 = BN2[1];
+	neighbor[76].z1 = BN3[2];
+	neighbor[76].w1 = BN4[2];
+	neighbor[76].nb2 = 79;
+	neighbor[76].x2 = BN1[0];
+	neighbor[76].y2 = BN2[2];
+	neighbor[76].z2 = BN3[2];
+	neighbor[76].w2 = BN4[2];
+	neighbor[76].nb3 = -1;
+	neighbor[76].x3 = -1;
+	neighbor[76].y3 = -1;
+	neighbor[76].z3 = -1;
+	neighbor[76].w3 = -1;
+	neighbor[76].nb4 = -1;
+	neighbor[76].x4 = -1;
+	neighbor[76].y4 = -1;
+	neighbor[76].z4 = -1;
+	neighbor[76].w4 = -1;
+
+	neighbor[77].nb1 = 78;
+	neighbor[77].x1 = BN1[2];
+	neighbor[77].y1 = BN2[1];
+	neighbor[77].z1 = BN3[2];
+	neighbor[77].w1 = BN4[2];
+	neighbor[77].nb2 = 80;
+	neighbor[77].x2 = BN1[1];
+	neighbor[77].y2 = BN2[2];
+	neighbor[77].z2 = BN3[2];
+	neighbor[77].w2 = BN4[2];
+	neighbor[77].nb3 = -1;
+	neighbor[77].x3 = -1;
+	neighbor[77].y3 = -1;
+	neighbor[77].z3 = -1;
+	neighbor[77].w3 = -1;
+	neighbor[77].nb4 = -1;
+	neighbor[77].x4 = -1;
+	neighbor[77].y4 = -1;
+	neighbor[77].z4 = -1;
+	neighbor[77].w4 = -1;
+
+	neighbor[78].nb1 = -1;
+	neighbor[78].x1 = -1;
+	neighbor[78].y1 = -1;
+	neighbor[78].z1 = -1;
+	neighbor[78].w1 = -1;
+	neighbor[78].nb2 = 81;
+	neighbor[78].x2 = BN1[2];
+	neighbor[78].y2 = BN2[2];
+	neighbor[78].z2 = BN3[2];
+	neighbor[78].w2 = BN4[2];
+	neighbor[78].nb3 = -1;
+	neighbor[78].x3 = -1;
+	neighbor[78].y3 = -1;
+	neighbor[78].z3 = -1;
+	neighbor[78].w3 = -1;
+	neighbor[78].nb4 = -1;
+	neighbor[78].x4 = -1;
+	neighbor[78].y4 = -1;
+	neighbor[78].z4 = -1;
+	neighbor[78].w4 = -1;
+
+	neighbor[79].nb1 = 80;
+	neighbor[79].x1 = BN1[1];
+	neighbor[79].y1 = BN2[2];
+	neighbor[79].z1 = BN3[2];
+	neighbor[79].w1 = BN4[2];
+	neighbor[79].nb2 = -1;
+	neighbor[79].x2 = -1;
+	neighbor[79].y2 = -1;
+	neighbor[79].z2 = -1;
+	neighbor[79].w2 = -1;
+	neighbor[79].nb3 = -1;
+	neighbor[79].x3 = -1;
+	neighbor[79].y3 = -1;
+	neighbor[79].z3 = -1;
+	neighbor[79].w3 = -1;
+	neighbor[79].nb4 = -1;
+	neighbor[79].x4 = -1;
+	neighbor[79].y4 = -1;
+	neighbor[79].z4 = -1;
+	neighbor[79].w4 = -1;
+
+	neighbor[80].nb1 = 81;
+	neighbor[80].x1 = BN1[2];
+	neighbor[80].y1 = BN2[2];
+	neighbor[80].z1 = BN3[2];
+	neighbor[80].w1 = BN4[2];
+	neighbor[80].nb2 = -1;
+	neighbor[80].x2 = -1;
+	neighbor[80].y2 = -1;
+	neighbor[80].z2 = -1;
+	neighbor[80].w2 = -1;
+	neighbor[80].nb3 = -1;
+	neighbor[80].x3 = -1;
+	neighbor[80].y3 = -1;
+	neighbor[80].z3 = -1;
+	neighbor[80].w3 = -1;
+	neighbor[80].nb4 = -1;
+	neighbor[80].x4 = -1;
+	neighbor[80].y4 = -1;
+	neighbor[80].z4 = -1;
+	neighbor[80].w4 = -1;
+
+	neighbor[81].nb1 = -1;
+	neighbor[81].x1 = -1;
+	neighbor[81].y1 = -1;
+	neighbor[81].z1 = -1;
+	neighbor[81].w1 = -1;
+	neighbor[81].nb2 = -1;
+	neighbor[81].x2 = -1;
+	neighbor[81].y2 = -1;
+	neighbor[81].z2 = -1;
+	neighbor[81].w2 = -1;
+	neighbor[81].nb3 = -1;
+	neighbor[81].x3 = -1;
+	neighbor[81].y3 = -1;
+	neighbor[81].z3 = -1;
+	neighbor[81].w3 = -1;
+	neighbor[81].nb4 = -1;
+	neighbor[81].x4 = -1;
+	neighbor[81].y4 = -1;
+	neighbor[81].z4 = -1;
+	neighbor[81].w4 = -1;
+/*	for (int i = 1; i <= 64; i++)
+	{
+		cout << neighbor[i].nb1 << " " << neighbor[i].x1 << " " << neighbor[i].y1 << " " << neighbor[i].nb2 << " " << neighbor[i].x2 << " " << neighbor[i].y2 <<endl;
+	}
+	cout << endl;
+*/
+	
+
+	return 0;
+	
+}
+
+
+bool comp(pair<int, double>p1, pair<int, double>p2){
+	return p1.second < p2.second;
+}
+
+
+double calculate(double x1, double x2, double x3, double x4)
+{
+
+	return (x1+x2+x3+x4);
+}
+
+
+int top_k(string a1, string a2, string a3,int k)
+{
+	int candidate=1,temp_p;
+	double S_k, S_unseen;
+
+
+
+
+	//int p_check[25];
+	int b_check[85];
+	int t_check[12000];
+
+	for (int i = 0; i < 12000; i++) t_check[i] = 0;
+	for (int i = 0; i < 85; i++) b_check[i] = 0;
+	
+
+
+	b_check[1] = 1;
+
+	vector< pair<int, double> >S;
+	vector< pair<int, double> >H;
+
+
+	while (1)
+	{
+		
+		temp_p = B[candidate];
+		
+		for (int i = 0; i < pid[temp_p].size(); i++)
+		{
+			if (pid[temp_p][i].second == candidate && t_check[pid[temp_p][i].first] == 0 && A1[pid[temp_p][i].first - 1] == a1 && A2[pid[temp_p][i].first - 1] == a2 && A3[pid[temp_p][i].first - 1] == a3)
+			{
+				//double score = N1[pid[temp_p][i].first - 1] + N2[pid[temp_p][i].first - 1] + N3[pid[temp_p][i].first - 1];
+				double score = calculate(N1[pid[temp_p][i].first - 1], N2[pid[temp_p][i].first - 1], N3[pid[temp_p][i].first - 1], N4[pid[temp_p][i].first - 1]);
+
+				S.push_back(make_pair(pid[temp_p][i].first, score));
+
+				t_check[pid[temp_p][i].first] = 1;
+			}
+		}
+
+		sort(S.begin(), S.end(), comp);
+		
+	/*	cout << "S list:";
+		for (int i = 0; i<S.size(); i++)
+		{
+			cout << "f(t"<<S[i].first<<")="<<S[i].second<<" ";
+		}
+		cout << endl;
+		*/
+		if (neighbor[candidate].nb1 > 0 && b_check[neighbor[candidate].nb1] == 0)
+		{
+			//H.push_back(make_pair(neighbor[candidate].nb1, neighbor[candidate].x1 + neighbor[candidate].y1 + neighbor[candidate].z1));
+			H.push_back(make_pair(neighbor[candidate].nb1, calculate(neighbor[candidate].x1, neighbor[candidate].y1, neighbor[candidate].z1, neighbor[candidate].w1)));
+			b_check[neighbor[candidate].nb1] = 1;
+		}
+		if (neighbor[candidate].nb2 > 0 && b_check[neighbor[candidate].nb2] == 0)
+		{
+			//H.push_back(make_pair(neighbor[candidate].nb2, neighbor[candidate].x2 + neighbor[candidate].y2 + neighbor[candidate].z2));
+			H.push_back(make_pair(neighbor[candidate].nb2, calculate(neighbor[candidate].x2, neighbor[candidate].y2, neighbor[candidate].z2, neighbor[candidate].w2)));
+			b_check[neighbor[candidate].nb2] = 1;
+		}
+		if (neighbor[candidate].nb3 > 0 && b_check[neighbor[candidate].nb3] == 0)
+		{
+			//H.push_back(make_pair(neighbor[candidate].nb3, neighbor[candidate].x3 + neighbor[candidate].y3 + neighbor[candidate].z3));
+			H.push_back(make_pair(neighbor[candidate].nb3, calculate(neighbor[candidate].x3, neighbor[candidate].y3, neighbor[candidate].z3, neighbor[candidate].w3)));
+			b_check[neighbor[candidate].nb3] = 1;
+		}
+		if (neighbor[candidate].nb4 > 0 && b_check[neighbor[candidate].nb4] == 0)
+		{
+			//H.push_back(make_pair(neighbor[candidate].nb3, neighbor[candidate].x3 + neighbor[candidate].y3 + neighbor[candidate].z3));
+			H.push_back(make_pair(neighbor[candidate].nb4, calculate(neighbor[candidate].x4, neighbor[candidate].y4, neighbor[candidate].z4, neighbor[candidate].w4)));
+			b_check[neighbor[candidate].nb4] = 1;
+		}
+
+
+		if (H.size() == 0) break;
+		sort(H.begin(), H.end(), comp);
+
+	/*	cout << "H list:";
+		for (int i = 0; i<H.size(); i++)
+		{   
+			
+		 cout << "f(b" << H[i].first << ")=" << H[i].second << " ";
+		}
+		cout << endl;
+		*/
+		candidate = H[0].first;
+
+		if (S.size() == 0) S_k = 0;
+		else if(k<=S.size()) S_k = S[k-1].second;
+		else S_k = S[S.size() - 1].second;
+
+		S_unseen = H[0].second;
+
+		//cout << " sk:" << S_k << "sunseen:" << S_unseen << endl;
+
+		H.erase(H.begin());
+
+		if (S_k <= S_unseen && S.size()==k ) break;
+		//if (H.size() == 0) break;
+
+	}
+
+	cout <<endl <<"Selected tuples are : "<<endl;
+
+	if (k > S.size()) k = S.size();
+
+	for (int i = 0; i < k; i++)
+	{
+		//cout << S[i].first << " ";
+		cout << Serial[S[i].first - 1] << " " << Name[S[i].first - 1] << " " << A1[S[i].first - 1] << " " << A2[S[i].first - 1] << " " << A3[S[i].first - 1] << " " << N1[S[i].first - 1] << " " << N2[S[i].first - 1] << " " << N3[S[i].first - 1] <<" "<< N4[S[i].first - 1] << endl;
+	}
+	return 0;
+}
+
+
+int main()
+{
+
+	//equi_depth();
+    //neighbor_info(); 
+	
+	high_resolution_clock::time_point t1 = high_resolution_clock::now();
+	func(1);
+	//func(2);
+	//top_k("Dhaka", "Dhaka", "Mirpur", 100);
+	//top_k("Khulna", "Kushtia", "Dowlotpur", 10);
+	//equi_depth();
+	//neighbor_info();
+	high_resolution_clock::time_point t2 = high_resolution_clock::now();
+	double duration = duration_cast<microseconds>(t2 - t1).count();
+
+	cout <<endl<<"time :" <<duration/1000000<<" second"<<endl;
+	//for (int i = 1; i <= 16; i++) cout << i << ": " << B[i] << endl;
+
+	
+	getchar();
+
+}
